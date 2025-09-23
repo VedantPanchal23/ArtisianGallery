@@ -56,3 +56,4 @@ App runs on Vite dev server (default: http://localhost:5173).
 - React frontend with Vite
 - ESLint for code quality
 - Modular folder structure
+ 

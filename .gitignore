@@ -1,0 +1,49 @@
+# Node.js
+node_modules/
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+backend/logs/
+frontend/logs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build output
+/dist/
+/build/
+backend/dist/
+frontend/dist/
+
+# Vite
+frontend/dist/
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Misc
+*.swp
+*.swo
+
+# Coverage
+coverage/
+backend/coverage/
+frontend/coverage/
+
+# EJS cache
+views/*.ejs~
+
+# Images
+backend/public/images/
+
+# Ignore frontend node_modules
+frontend/node_modules/

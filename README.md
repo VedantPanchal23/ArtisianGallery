@@ -1,6 +1,3 @@
-
-hello
-
 # Artisian Gallery
 
 This is a full-stack web application consisting of a Node.js/Express backend and a React/Vite frontend.

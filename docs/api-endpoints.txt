@@ -1,0 +1,185 @@
+# ArtHive API Documentation
+
+Base URL: `http://localhost:3000/api/v1`
+
+## Authentication Endpoints
+
+### 1. Register User
+**POST** `/auth/register`
+
+Register a new user account.
+
+**Request Body:**
+```json
+{
+  "name": "vedant bauna",
+  "username": "vedantbauna",
+  "email": "vedant@gmail.com",
+  "password": "password123",
+  "confirmPassword": "password123",
+  "mobile": "+1234567890", // optional
+  "role": "user" // or "artist"
+}
+```
+
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "user": {
+    "_id": "64f5a7b8c2e1234567890123",
+    "name": "vedant bauna",
+    "username": "vedantbauna",
+    "email": "vedantbauna@gmail.com",
+    "role": "user",
+    "avatarUrl": "",
+    "bio": "",
+    "purchasedArtworks": [],
+    "uploadedArtworks": [],
+    "isBlocked": false,
+    "createdAt": "2023-09-24T10:30:00.000Z",
+    "updatedAt": "2023-09-24T10:30:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Responses:**
+- **400 Bad Request**: Validation errors, user already exists
+- **500 Internal Server Error**: Server errors
+
+---
+
+### 2. Login User
+**POST** `/auth/login`
+
+Authenticate user and get access token.
+
+**Request Body:**
+```json
+{
+  "username": "vedantbauna", // or email
+  "password": "password123"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "user": {
+    "_id": "64f5a7b8c2e1234567890123",
+    "name": "vedant bauna",
+    "username": "vedantbauna",
+    "email": "vedant@gmail.com",
+    "role": "user",
+    "avatarUrl": "",
+    "bio": "",
+    "purchasedArtworks": [],
+    "uploadedArtworks": [],
+    "isBlocked": false,
+    "createdAt": "2023-09-24T10:30:00.000Z",
+    "updatedAt": "2023-09-24T10:30:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Responses:**
+- **400 Bad Request**: Validation errors
+- **401 Unauthorized**: Invalid credentials
+- **403 Forbidden**: Account blocked
+- **500 Internal Server Error**: Server errors
+
+---
+
+### 3. Forgot Password
+**POST** `/auth/forgot-password`
+
+Request password reset link.
+
+**Request Body:**
+```json
+{
+  "email": "vedant@gmail.com"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "If an account with that email exists, we have sent a password reset link."
+}
+```
+
+**Error Responses:**
+- **400 Bad Request**: Email required
+- **500 Internal Server Error**: Server errors
+
+---
+
+## Authentication Headers
+
+For protected routes, include the JWT token in the Authorization header:
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+## User Model Schema
+
+```javascript
+{
+  _id: ObjectId,
+  name: String (required),
+  username: String (required, unique),
+  email: String (required, unique),
+  password: String (required, hashed),
+  role: String (enum: ['user', 'artist', 'admin'], default: 'user'),
+  avatarUrl: String (default: ''),
+  bio: String (default: ''),
+  purchasedArtworks: [ObjectId] (ref: 'Artwork'),
+  uploadedArtworks: [ObjectId] (ref: 'Artwork'),
+  isBlocked: Boolean (default: false),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+## Error Response Format
+
+All error responses follow this format:
+
+```json
+{
+  "success": false,
+  "message": "Error message description"
+}
+```
+
+## Security Features
+
+- **Password Hashing**: bcrypt with salt rounds 12
+- **JWT Tokens**: 7-day expiration
+- **Rate Limiting**: 100 requests per 15 minutes per IP
+- **CORS**: Configured for frontend domain
+- **Helmet**: Security headers
+- **Input Validation**: Joi schema validation
+- **User Blocking**: Account blocking functionality
+
+## Frontend Integration
+
+The frontend stores authentication data in localStorage:
+- `arthive_token`: JWT token
+- `arthive_user`: User object (without password)
+
+## Coming Soon
+
+- **Artwork Management**: Upload, browse, purchase artworks
+- **User Profiles**: Update profile, view purchase history
+- **Admin Panel**: User management, content moderation
+- **Payment Integration**: Stripe checkout
+- **File Upload**: Cloudinary/S3 integration

@@ -57,3 +57,5 @@ App runs on Vite dev server (default: http://localhost:5173).
 - ESLint for code quality
 - Modular folder structure
  
+
+ 

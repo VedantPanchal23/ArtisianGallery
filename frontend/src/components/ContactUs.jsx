@@ -32,7 +32,7 @@ class ContactUs extends Component {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+₹/;
     if (!emailRegex.test(email)) {
       this.setState({ error: 'Please enter a valid email address.' });
       return;

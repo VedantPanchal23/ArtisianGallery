@@ -39,6 +39,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  title: {
+    type: String,
+    default: ''
+  },
+  profileImage: {
+    type: String,
+    default: ''
+  },
+  followers: {
+    type: String,
+    default: '0'
+  },
+  following: {
+    type: String,
+    default: '0'
+  },
   purchasedArtworks: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Artwork'

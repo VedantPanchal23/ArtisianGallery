@@ -170,7 +170,7 @@ router.post('/forgot-password', async function(req, res, next) {
 
     // TODO: Implement email sending logic here
     if (user) {
-      console.log(`Password reset requested for user: ${user.email}`);
+      console.log(`Password reset requested for user: ₹{user.email}`);
       // Generate reset token and send email
     }
 

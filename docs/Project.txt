@@ -1,0 +1,608 @@
+Overview
+
+Project name: ArtHive — NFT-like Digital Art Marketplace (no blockchain)
+Goal: Centralized marketplace where artists upload & sell digital art, users browse/like/favorite/buy art, admins moderate content and manage payouts.
+Tech stack: MERN (MongoDB, Express, React, Node). Storage via MongoDB. Payments via Stripe (recommended) or Razorpay.
+
+1. Scope & Priorities (MVP vs Optional)
+
+MVP (Week 1–2):
+
+Auth (signup/login/forgot/reset)
+
+Role-based users (user, artist, admin)
+
+Artist upload (image upload → cloud)
+
+Artwork browse & detail pages
+
+Like & favorite
+
+Cart & checkout (Stripe test mode)
+
+Transaction recording & secure download link
+
+Basic admin: approve/reject uploads, view reports
+
+Basic UI (responsive)
+
+Nice-to-have (Week 3 / later):
+
+Leaderboard, badges, challenges (gamification)
+
+Advanced analytics dashboard
+
+Refunds & payout automation
+
+In-app messaging to artists
+
+Multi-image artworks, collections
+
+Social sharing, comments
+
+2. User Roles & Permissions
+
+Anonymous / Visitor: Browse listings, search, view details.
+
+User (buyer): Create account, like/favorite, add to cart, buy, download purchased art, view purchases.
+
+Artist: Everything user can do + upload artwork, manage portfolio, view earnings & sales.
+
+Admin: Approve/reject uploads, manage users & content, handle reports, view analytics, issue refunds.
+
+3. High-level User Flows
+
+Browse → Buy
+
+Visit Home → apply filters → open Artwork Detail → click Buy → login/signup if needed → Checkout → Payment → Webhook triggers → transaction recorded → buyer receives time-limited download link.
+
+Artist Upload
+
+Login as Artist → Upload Artwork (image + meta) → stored in cloud → DB record status=pending → Admin approves → artwork appears in feed.
+
+Admin Moderation
+
+Admin lists pending artworks → review → approve/reject with notes → if approved visible to users.
+
+(Keep these flows as acceptance tests.)
+
+4. Data Models (Mongoose-like schemas)
+
+User
+
+{
+  _id: ObjectId,
+  name: String,
+  email: { type: String, unique: true, index: true },
+  passwordHash: String,
+  role: { type: String, enum: ['user','artist','admin'], default: 'user' },
+  bio: String,
+  profilePicUrl: String,
+  stripeAccountId: String, // optional
+  earnings: Number, // for artists
+  favorites: [ObjectId], // artwork ids
+  createdAt: Date,
+  updatedAt: Date
+}
+
+
+Artwork
+
+{
+  _id: ObjectId,
+  title: String,
+  description: String,
+  price: Number, // in cents/paise (integer)
+  currency: String, // "USD" or "INR"
+  imageUrl: String,
+  thumbUrl: String,
+  artistId: ObjectId (ref User),
+  category: String,
+  tags: [String],
+  likesCount: Number,
+  favoritesCount: Number,
+  salesCount: Number,
+  status: { type: String, enum: ['pending','approved','rejected'], default: 'pending' },
+  approvedBy: ObjectId,
+  approvedAt: Date,
+  reportCount: Number,
+  createdAt: Date,
+  updatedAt: Date
+}
+
+
+Transaction
+
+{
+  _id: ObjectId,
+  buyerId: ObjectId,
+  artworkId: ObjectId,
+  amount: Number,
+  currency: String,
+  paymentProvider: String, // "stripe"
+  paymentIntentId: String,
+  status: { type: String, enum: ['pending','completed','failed','refunded'] },
+  receiptUrl: String, // stripe receipt
+  downloadUrl: String, // time-limited signed URL
+  createdAt: Date
+}
+
+
+Report
+
+{
+  _id: ObjectId,
+  reporterId: ObjectId,
+  artworkId: ObjectId,
+  reason: String,
+  notes: String,
+  status: { type: String, enum: ['open','dismissed','actioned'] },
+  createdAt: Date
+}
+
+
+Badge / Leaderboard (optional)
+
+{ userId, badgeType, awardedAt }
+
+
+Indexes
+
+Users: index on email
+
+Artwork: index on status, artistId, category, price, compound index for likesCount (sort)
+
+Transactions: index on buyerId, artworkId, paymentIntentId
+
+5. API Blueprint (versioned: /api/v1/)
+
+Security: Most protected endpoints require Authorization: Bearer <JWT>; use role check middleware for artist/admin.
+
+Core endpoints (examples include request + response stubs):
+
+Auth
+
+POST /api/v1/auth/register
+
+Body: { name, email, password, role }
+
+Response: 201 { user: {...}, token }
+
+POST /api/v1/auth/login
+
+Body: { email, password }
+
+Response: 200 { user, token, refreshToken } (refresh token as httpOnly cookie)
+
+POST /api/v1/auth/forgot-password
+
+Body: { email } → sends reset email with token
+
+POST /api/v1/auth/reset-password
+
+Body: { token, newPassword }
+
+Users
+
+GET /api/v1/users/:id — public profile (artist/public info)
+
+PUT /api/v1/users/:id — auth, owner or admin (update bio, avatar)
+
+GET /api/v1/users/:id/purchases — auth owner or admin
+
+Artworks
+
+POST /api/v1/artworks — create (artist only)
+
+Body: { title, description, price, currency, category, tags, imageUrl }
+
+Response: 201 { artwork } (status pending)
+
+GET /api/v1/artworks — list with filters: ?q=&category=&minPrice=&maxPrice=&sort=&page=&limit=
+
+GET /api/v1/artworks/:id — detail
+
+PUT /api/v1/artworks/:id — update (artist owner or admin)
+
+DELETE /api/v1/artworks/:id — delete (artist owner or admin)
+
+POST /api/v1/artworks/:id/like — toggle like (auth)
+
+POST /api/v1/artworks/:id/favorite — toggle favorite (auth)
+
+POST /api/v1/artworks/:id/report — report artwork (auth)
+
+GET /api/v1/artworks/:id/download — generate time-limited download link (auth & purchase check)
+
+Uploads / Storage
+
+POST /api/v1/uploads/presign — returns presigned URL or upload params (artist-only)
+
+POST /api/v1/uploads — server receives uploaded file (multer) → uploads to Cloudinary/S3 and returns { imageUrl, thumbUrl }
+
+Cart & Checkout
+
+GET /api/v1/cart — get current user cart
+
+POST /api/v1/cart — add item { artworkId }
+
+DELETE /api/v1/cart/:artworkId — remove
+
+POST /api/v1/checkout/create-session — create Stripe session; body: { cartItems } → returns sessionId or checkoutUrl
+
+POST /api/v1/webhooks/stripe — webhook endpoint for payment success / failure → verify signature and create transaction
+
+Transactions & Refunds
+
+GET /api/v1/transactions/:id — get transaction (owner/admin)
+
+GET /api/v1/users/:id/transactions — list user transactions
+
+POST /api/v1/refunds/:transactionId — admin triggers refund
+
+Admin
+
+GET /api/v1/admin/artworks/pending — admin list pending
+
+PUT /api/v1/admin/artworks/:id/approve — approve (admin)
+
+PUT /api/v1/admin/artworks/:id/reject — reject with reason
+
+GET /api/v1/admin/reports — list reports
+
+GET /api/v1/admin/analytics — revenue, top artists, top categories
+
+6. Request / Response Examples (small)
+
+Register
+
+POST /api/v1/auth/register
+Content-Type: application/json
+
+{ "name":"Anu", "email":"anu@example.com", "password":"P@ssw0rd", "role":"artist" }
+
+
+Response:
+
+201
+{
+  "user": { "_id":"...", "name":"Anu", "email":"anu@example.com", "role":"artist" },
+  "token": "eyJ..." 
+}
+
+
+Create Artwork
+
+POST /api/v1/artworks
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "title":"Sunrise","description":"...","price":1000,"currency":"INR","imageUrl":"https://.../img.jpg","category":"digital painting" }
+
+
+Response:
+
+201
+{ "artwork": { "_id":"...", "status":"pending", "artistId":"..." } }
+
+
+Create Stripe Session
+
+POST /api/v1/checkout/create-session
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "cart":[ { "artworkId":"...", "price":1000, "quantity":1 } ], "successUrl":"https://..." }
+
+
+Response:
+
+200
+{ "sessionId": "cs_test_..." }
+
+
+Stripe webhook (server verifies signature) → on success: create transaction record, update salesCount, increment artist earnings, generate signed download URL, email buyer.
+
+7. Frontend Architecture & Components
+
+Libraries: React + Vite, react-router-dom, axios, react-query (optional), react-hook-form, tailwindcss, react-dropzone, react-stripe-js.
+
+Routes (pages):
+
+/ — HomeFeed
+
+/artwork/:id — ArtworkDetail
+
+/artist/:id — ArtistProfile
+
+/upload — UploadArtwork (artist)
+
+/cart — Cart
+
+/checkout — Checkout (Stripe)
+
+/login, /signup, /forgot, /reset
+
+/profile — ProfilePage (user)
+
+/favorites — Favorites
+
+/admin — Admin Dashboard (optional route guarded to admin)
+
+Key components (props + purpose):
+
+Navbar — shows auth state, cart count, search
+
+ArtworkCard({artwork}) — thumbnail, title, artist name, price, like button
+
+HomeFeed — grid of ArtworkCard, filters, pagination
+
+ArtworkDetail — big preview, metadata, buy/like/favorite buttons
+
+UploadArtwork — form with image preview & upload widget
+
+Cart — list items, show total, proceed to checkout
+
+Checkout — payment UI + redirect to Stripe
+
+ProtectedRoute — route guard by role
+
+AdminPanel — list pending artworks, reports, approve/reject
+
+State management: Context for Auth & Cart; react-query for server-state (listings, artwork detail, transactions).
+
+8. Storage & File Upload Strategy
+
+Options:
+
+Cloudinary (recommended for images): easy, auto-thumbnails, transformations, simple SDK.
+
+S3 + CloudFront: more control; use presigned PUT URLs from backend and CloudFront for CDN.
+
+Upload flow (presigned):
+
+Frontend requests POST /uploads/presign for file meta.
+
+Backend returns presigned URL + key.
+
+Frontend uploads directly to S3/Cloudinary.
+
+Frontend notifies backend POST /uploads with final URL and metadata → backend creates Artwork record with status=pending.
+
+Security: Validate file type & size, scan if needed.
+
+Download link: Use time-limited signed URL (S3 presigned GET or Cloudinary authenticated URL) and only issue if user has purchased.
+
+9. Payment Flow (Stripe recommended)
+
+Frontend calls POST /checkout/create-session with cart.
+
+Backend creates Stripe Checkout Session with line items and success/cancel URLs, returns sessionId.
+
+Frontend uses stripe.redirectToCheckout({ sessionId }).
+
+On success Stripe calls your webhook endpoint /webhooks/stripe with signature — backend verifies, then:
+
+Create Transaction with status=completed
+
+Update artwork salesCount, artist earnings (less platform fee)
+
+Generate download URL and email buyer (or show in purchase history)
+
+Optionally transfer funds to artist (connect accounts) or record for manual payout.
+
+Important: Use webhook to confirm payment — do NOT rely on client redirect.
+
+10. Security Checklist
+
+Use helmet, express-rate-limit, cors with allowed origins.
+
+Use HTTPS in production.
+
+Store refresh tokens in secure httpOnly cookies.
+
+Password hashing via bcrypt (salt rounds 12+).
+
+JWT rotation + short expiry for access tokens (e.g., 15m).
+
+Validate/sanitize inputs with Joi.
+
+Limit file upload type & size; validate content-type server-side.
+
+Implement role-based access control (RBAC).
+
+Log and monitor suspicious activities.
+
+CSRF protection for cookie-based auth if applicable.
+
+Enforce Content Security Policy (CSP) for frontend.
+
+11. Testing Strategy
+
+Unit tests: Jest for server utilities & services.
+
+Integration tests: supertest for API routes.
+
+E2E tests: Cypress for major flows (signup, upload, checkout).
+
+Manual tests: Postman collection for all endpoints + example requests.
+
+Acceptance tests: list of scenarios (buy flow, artist upload approval, download access locked for non-buyers).
+
+12. Dev / Deployment Plan
+
+Local dev:
+
+Backend: cd backend → npm install → set .env → npm run dev (nodemon)
+
+Frontend: cd frontend → npm install → npm run dev (Vite)
+
+Deploy:
+
+DB: MongoDB Atlas
+
+Backend: Render / Heroku / Railway / DigitalOcean App Platform
+
+Frontend: Vercel / Netlify
+
+Images: Cloudinary or S3 + CloudFront
+
+CI: GitHub Actions to run tests, lint, build & deploy
+
+Webhooks: Ensure backend public URL and verify signatures
+
+13. Monitoring & Logging
+
+Centralized logs (Winston) and errors reported to Sentry.
+
+Basic metrics: hits, errors, average request latency.
+
+Use Stripe dashboard for payments, alerts for failed webhooks.
+
+14. Scalability & Performance Tips
+
+Use CDN for images.
+
+Use server-side pagination and limit queries.
+
+Cache popular items (Redis) if needed.
+
+Use indexes on DB queries.
+
+Separate microservices (payments, uploads) later if scale requires.
+
+15. Acceptance Criteria (What “done” looks like for MVP)
+
+Users can register & login (JWT).
+
+Artists can upload an artwork that is stored in cloud and saved with status=pending.
+
+Admin can view pending artworks and approve/reject.
+
+Approved artworks show on Home feed and via search & filters.
+
+Users can add to cart and checkout using Stripe test keys.
+
+Stripe webhook correctly creates Transaction records and provides buyer with time-limited download link.
+
+Likes & favorites work and persist to DB.
+
+Repo includes README with setup steps & .env.example, Postman collection, and at least basic unit tests.
+
+App deployed publicly with environment variables and documented endpoints.
+
+16. Deliverables to hand to the builder
+
+This blueprint/spec (this document).
+
+Repo skeleton (you already have).
+
+.env.example with variable names.
+
+Postman collection stub (or OpenAPI swagger.yaml).
+
+Admin credentials (seed script) or instructions to create admin.
+
+3-week milestone plan (we created earlier).
+
+Design assets (logo, sample images) or instructions to use placeholders.
+
+17. Handover Checklist for Developer (quick)
+
+Clone repo.
+
+Setup backend/.env from .env.example.
+
+cd backend && npm install
+
+cd frontend && npm install (or run Vite scaffold if not)
+
+Create a test admin user (via seed script or register then set role).
+
+Run backend npm run dev and frontend npm run dev.
+
+Run Postman collection tests (provided).
+
+Deploy backend to Render / Heroku, frontend to Vercel, configure env vars.
+
+Hook up Stripe keys + webhook URL.
+
+Validate one purchase end-to-end (test card).
+
+18. Coding Conventions & Git Workflow
+
+Use ESLint + Prettier config.
+
+Branches: main (stable), dev (integration), feature branches feature/<short-desc>.
+
+PR template with: what changed, how to test, screenshots, issue link.
+
+Atomic commits, meaningful commit messages.
+
+19. Timeline & Milestones (mapped to 3-week plan)
+
+Week 1 (Core infra & Auth):
+
+Setup repo, envs, DB connection.
+
+Implement auth & user model.
+
+Frontend auth pages + Nav.
+
+Week 2 (Core marketplace):
+
+Artwork model, upload implementation, list & detail pages.
+
+Cart & Stripe checkout (test).
+
+Webhook handler and transaction creation.
+
+Week 3 (Admin + polish & deploy):
+
+Admin endpoints and UI for approval & reports.
+
+Profiles, favorites, purchase history.
+
+Testing, docs, deploy.
+
+20. Extras & Future Ideas
+
+Artist payouts via Stripe Connect.
+
+Multi-asset listings (zipped files, multi-resolution images).
+
+Social features: comments, follower system.
+
+Licensing management & watermarking.
+
+Integrate analytics for artists (views, conversion).
+
+21. Sample Top-level README content (copy/paste)
+# ArtHive
+
+MERN stack marketplace for digital art (no blockchain).
+
+## Quick start (dev)
+### Backend
+1. cd backend
+2. cp .env.example .env && fill values
+3. npm install
+4. npm run dev
+
+### Frontend
+1. cd frontend
+2. npm install
+3. npm run dev
+
+## APIs
+Base: /api/v1
+See `docs/` or Postman collection for details.
+
+## Deploy
+- Backend: Render / Heroku (set env vars)
+- Frontend: Vercel / Netlify
+- DB: MongoDB Atlas
+- Storage: Cloudinary or S3
+
+## Contributing
+Follow branch naming, PR template, and code style (ESLint).

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import Navbar from './Navbar';
 import './ArtistProfile.css';
 
 class ArtistProfile extends Component {
@@ -267,30 +268,7 @@ class ArtistProfile extends Component {
 
     return (
       <div className="artist-profile">
-        {/* Header */}
-        <div className="profile-header">
-          <div className="header-content">
-            <div className="logo">
-              <span>Arthive</span>
-            </div>
-            <div className="header-nav">
-              <a href="#" className="nav-link">Explore</a>
-              <a href="#" className="nav-link">My Profile</a>
-              <a href="#" className="nav-link">Sell Art</a>
-              <div className="search-container">
-                <input type="text" placeholder="Search for art" className="search-input" />
-                <button className="search-btn">🔍</button>
-              </div>
-              <div className="header-icons">
-                <button className="icon-btn">🛒</button>
-                <button className="icon-btn">💬</button>
-                <div className="profile-avatar">
-                  <img src={artist?.profileImage || '/api/placeholder/40/40'} alt="Profile" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Navbar />
 
         {/* Profile Section */}
         <div className="profile-section">

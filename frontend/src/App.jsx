@@ -9,6 +9,7 @@ import ContactUs from './components/ContactUs';
 import AboutUs from './components/AboutUs';
 import Explore from './components/Explore';
 import ArtistProfile from './components/ArtistProfile';
+import UserProfile from './components/UserProfile';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -33,8 +34,13 @@ class App extends Component {
                 </ProtectedRoute>
               } />
               <Route path="/artist-profile" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="artist">
                   <ArtistProfile />
+                </ProtectedRoute>
+              } />
+              <Route path="/user-profile" element={
+                <ProtectedRoute requiredRole="user">
+                  <UserProfile />
                 </ProtectedRoute>
               } />
               {/* Add other routes here */}

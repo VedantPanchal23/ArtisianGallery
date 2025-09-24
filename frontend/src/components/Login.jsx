@@ -64,9 +64,10 @@ class Login extends Component {
         // Show success message
         alert('Login successful!');
         
-        // Set redirect state instead of immediate redirect
-        console.log('Setting redirect to dashboard...');
-        this.setState({ redirectTo: '/dashboard' });
+        // Role-based redirect
+        const redirectPath = data.user.role === 'artist' ? '/artist-profile' : '/user-profile';
+        console.log(`Setting redirect to ${redirectPath} for role: ${data.user.role}`);
+        this.setState({ redirectTo: redirectPath });
       } else {
         console.error('Login failed:', data.message);
         this.setState({ error: data.message || 'Login failed' });
@@ -79,6 +80,7 @@ class Login extends Component {
         // Backend is not running - use mock data for testing
         console.log('Backend not available, using mock login...');
         
+        // Mock artist login
         if (this.state.username === 'vedantbauna' && this.state.password === 'password123') {
           const mockUser = {
             _id: '507f1f77bcf86cd799439011',
@@ -90,9 +92,35 @@ class Login extends Component {
           
           const mockToken = 'mock-jwt-token-for-testing';
           
+          alert('Mock artist login successful! (Backend not running)');
+          this.context.login(mockUser, mockToken);
+          
+          // Role-based redirect for mock user
+          const redirectPath = mockUser.role === 'artist' ? '/artist-profile' : '/user-profile';
+          console.log(`Mock redirect to ${redirectPath} for role: ${mockUser.role}`);
+          this.setState({ redirectTo: redirectPath });
+          return;
+        }
+        
+        // Mock basic user login
+        if (this.state.username === 'johnuser' && this.state.password === 'password123') {
+          const mockUser = {
+            _id: '507f1f77bcf86cd799439012',
+            name: 'John Smith',
+            username: 'johnuser',
+            email: 'john@gmail.com',
+            role: 'user'
+          };
+          
+          const mockToken = 'mock-jwt-token-for-testing';
+          
           alert('Mock login successful! (Backend not running)');
           this.context.login(mockUser, mockToken);
-          this.setState({ redirectTo: '/dashboard' });
+          
+          // Role-based redirect for mock user
+          const redirectPath = mockUser.role === 'artist' ? '/artist-profile' : '/user-profile';
+          console.log(`Mock redirect to ${redirectPath} for role: ${mockUser.role}`);
+          this.setState({ redirectTo: redirectPath });
           return;
         } else {
           this.setState({ error: 'Backend server not running. Try username: "vedantbauna", password: "password123" for mock login.' });

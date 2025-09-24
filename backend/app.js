@@ -12,6 +12,7 @@ require('dotenv').config();
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
+var artistsRouter = require('./routes/artists');
 
 var app = express();
 
@@ -49,9 +50,21 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Backend server is running!',
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/artists', artistsRouter);
+app.use('/api/v1/test', require('./routes/test'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

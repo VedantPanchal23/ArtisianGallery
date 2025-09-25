@@ -8,10 +8,6 @@ import ForgotPassword from './components/ForgotPassword';
 import ContactUs from './components/ContactUs';
 import AboutUs from './components/AboutUs';
 import Explore from './components/Explore';
-import ArtistProfile from './components/ArtistProfile';
-import UserProfile from './components/UserProfile';
-import Dashboard from './components/Dashboard';
-import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 class App extends Component {
@@ -28,21 +24,6 @@ class App extends Component {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/contact" element={<ContactUs />} />
               <Route path="/about" element={<AboutUs />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/artist-profile" element={
-                <ProtectedRoute requiredRole="artist">
-                  <ArtistProfile />
-                </ProtectedRoute>
-              } />
-              <Route path="/user-profile" element={
-                <ProtectedRoute requiredRole="user">
-                  <UserProfile />
-                </ProtectedRoute>
-              } />
               {/* Add other routes here */}
             </Routes>
           </div>

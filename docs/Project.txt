@@ -12,7 +12,7 @@ Auth (signup/login/forgot/reset)
 
 Role-based users (user, artist, admin)
 
-Artist upload (image upload)
+Artist upload (image upload → cloud)
 
 Artwork browse & detail pages
 

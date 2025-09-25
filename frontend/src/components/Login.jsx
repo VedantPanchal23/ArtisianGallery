@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
 import './Login.css';
 
 class Login extends Component {
@@ -12,8 +11,7 @@ class Login extends Component {
       username: '',
       password: '',
       loading: false,
-      error: '',
-      redirectTo: null
+      error: ''
     };
   }
 
@@ -28,11 +26,6 @@ class Login extends Component {
     e.preventDefault();
     this.setState({ loading: true, error: '' });
 
-    console.log('Attempting login with:', {
-      username: this.state.username,
-      password: '***hidden***'
-    });
-
     try {
       const response = await fetch('http://localhost:3000/api/v1/auth/login', {
         method: 'POST',
@@ -45,100 +38,26 @@ class Login extends Component {
         })
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-      console.log('Login response data:', data);
 
       if (data.success) {
-        console.log('Login successful, user role:', data.user.role);
-        
         // Use auth context to update state
         this.context.login(data.user, data.token);
         
-        // Show success message
-        alert('Login successful!');
-        
-        // Role-based redirect
-        const redirectPath = data.user.role === 'artist' ? '/artist-profile' : '/user-profile';
-        console.log(`Setting redirect to ${redirectPath} for role: ${data.user.role}`);
-        this.setState({ redirectTo: redirectPath });
+        // Redirect to home with success message
+        window.location.href = '/?success=login';
       } else {
-        console.error('Login failed:', data.message);
-        this.setState({ error: data.message || 'Login failed' });
+        this.setState({ error: data.message });
       }
     } catch (error) {
       console.error('Login error:', error);
-      
-      // Check if backend is running
-      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
-        // Backend is not running - use mock data for testing
-        console.log('Backend not available, using mock login...');
-        
-        // Mock artist login
-        if (this.state.username === 'vedantbauna' && this.state.password === 'password123') {
-          const mockUser = {
-            _id: '507f1f77bcf86cd799439011',
-            name: 'vedant bauna',
-            username: 'vedantbauna',
-            email: 'vedant@gmail.com',
-            role: 'artist'
-          };
-          
-          const mockToken = 'mock-jwt-token-for-testing';
-          
-          alert('Mock artist login successful! (Backend not running)');
-          this.context.login(mockUser, mockToken);
-          
-          // Role-based redirect for mock user
-          const redirectPath = mockUser.role === 'artist' ? '/artist-profile' : '/user-profile';
-          console.log(`Mock redirect to ${redirectPath} for role: ${mockUser.role}`);
-          this.setState({ redirectTo: redirectPath });
-          return;
-        }
-        
-        // Mock basic user login
-        if (this.state.username === 'johnuser' && this.state.password === 'password123') {
-          const mockUser = {
-            _id: '507f1f77bcf86cd799439012',
-            name: 'John Smith',
-            username: 'johnuser',
-            email: 'john@gmail.com',
-            role: 'user'
-          };
-          
-          const mockToken = 'mock-jwt-token-for-testing';
-          
-          alert('Mock login successful! (Backend not running)');
-          this.context.login(mockUser, mockToken);
-          
-          // Role-based redirect for mock user
-          const redirectPath = mockUser.role === 'artist' ? '/artist-profile' : '/user-profile';
-          console.log(`Mock redirect to ${redirectPath} for role: ${mockUser.role}`);
-          this.setState({ redirectTo: redirectPath });
-          return;
-        } else {
-          this.setState({ error: 'Backend server not running. Try username: "vedantbauna", password: "password123" for mock login.' });
-        }
-      } else {
-        this.setState({ error: `Network error: ${error.message}. Please try again.` });
-      }
+      this.setState({ error: 'Network error. Please try again.' });
     } finally {
       this.setState({ loading: false });
     }
   }
 
   render() {
-    // Handle redirect after successful login
-    if (this.state.redirectTo) {
-      return <Navigate to={this.state.redirectTo} replace />;
-    }
-
     return (
       <div className="login-page">
         <div className="login-container">

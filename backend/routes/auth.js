@@ -1,30 +1,63 @@
 var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
-var Joi = require('joi');
 var User = require('../models/User');
 
-// Validation schemas
-const registerSchema = Joi.object({
-  name: Joi.string().min(2).max(50).required(),
-  username: Joi.string().min(3).max(30).alphanum().required(),
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-  confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
-  mobile: Joi.string().optional().allow(''),
-  role: Joi.string().valid('user', 'artist').default('user')
-});
+// Simple validation functions
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
-const loginSchema = Joi.object({
-  username: Joi.string().required(),
-  password: Joi.string().required()
-});
+const validateRegisterData = (data) => {
+  const { name, username, email, password, confirmPassword } = data;
+  
+  if (!name || name.length < 2 || name.length > 50) {
+    return 'Name must be between 2 and 50 characters';
+  }
+  
+  if (!username || username.length < 3 || username.length > 30) {
+    return 'Username must be between 3 and 30 characters';
+  }
+  
+  if (!/^[a-zA-Z0-9]+$/.test(username)) {
+    return 'Username must contain only alphanumeric characters';
+  }
+  
+  if (!email || !validateEmail(email)) {
+    return 'Please provide a valid email address';
+  }
+  
+  if (!password || password.length < 6) {
+    return 'Password must be at least 6 characters long';
+  }
+  
+  if (password !== confirmPassword) {
+    return 'Passwords do not match';
+  }
+  
+  return null;
+};
+
+const validateLoginData = (data) => {
+  const { username, password } = data;
+  
+  if (!username) {
+    return 'Username is required';
+  }
+  
+  if (!password) {
+    return 'Password is required';
+  }
+  
+  return null;
+};
 
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign(
     { userId: userId },
-    process.env.JWT_SECRET || 'arthive_secret_key',
+    'arthive_secret_key',
     { expiresIn: '7d' }
   );
 };
@@ -33,15 +66,15 @@ const generateToken = (userId) => {
 router.post('/register', async function(req, res, next) {
   try {
     // Validate request body
-    const { error, value } = registerSchema.validate(req.body);
-    if (error) {
+    const validationError = validateRegisterData(req.body);
+    if (validationError) {
       return res.status(400).json({
         success: false,
-        message: error.details[0].message
+        message: validationError
       });
     }
 
-    const { name, username, email, password, mobile, role } = value;
+    const { name, username, email, password, mobile, role = 'user' } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -89,15 +122,15 @@ router.post('/register', async function(req, res, next) {
 router.post('/login', async function(req, res, next) {
   try {
     // Validate request body
-    const { error, value } = loginSchema.validate(req.body);
-    if (error) {
+    const validationError = validateLoginData(req.body);
+    if (validationError) {
       return res.status(400).json({
         success: false,
-        message: error.details[0].message
+        message: validationError
       });
     }
 
-    const { username, password } = value;
+    const { username, password } = req.body;
 
     // Find user by username or email
     const user = await User.findOne({
@@ -170,7 +203,7 @@ router.post('/forgot-password', async function(req, res, next) {
 
     // TODO: Implement email sending logic here
     if (user) {
-      console.log(`Password reset requested for user: ₹{user.email}`);
+      console.log(`Password reset requested for user: ${user.email}`);
       // Generate reset token and send email
     }
 

@@ -47,5 +47,3 @@ backend/public/images/
 
 # Ignore frontend node_modules
 frontend/node_modules/
-
-.github

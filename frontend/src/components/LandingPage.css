@@ -105,7 +105,12 @@ html, body {
 }
 
 .hero {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url('/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   padding: 8rem 0;
   text-align: center;
   min-height: calc(100vh - 80px);
@@ -125,7 +130,7 @@ html, body {
 .hero h1 {
   font-size: 3.5rem;
   margin-bottom: 1.5rem;
-  color: #2B2F6B;
+  color: #ffffff;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -133,7 +138,7 @@ html, body {
 .hero p {
   font-size: 1.3rem;
   margin-bottom: 2.5rem;
-  color: #666;
+  color: #f0f0f0;
   line-height: 1.6;
 }
 
@@ -145,7 +150,7 @@ html, body {
 }
 
 .btn-primary {
-  background-color: #6366f1;
+  background-color: #9b59b6;
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -158,14 +163,14 @@ html, body {
 }
 
 .btn-primary:hover {
-  background-color: #4f46e5;
+  background-color: #8e44ad;
   transform: translateY(-2px);
 }
 
 .btn-secondary {
   background-color: transparent;
-  color: #2B2F6B;
-  border: 2px solid #2B2F6B;
+  color: #ffffff;
+  border: 2px solid #ffffff;
   padding: 1rem 2rem;
   border-radius: 8px;
   cursor: pointer;
@@ -175,8 +180,8 @@ html, body {
 }
 
 .btn-secondary:hover {
-  background-color: #2B2F6B;
-  color: white;
+  background-color: #ffffff;
+  color: #2B2F6B;
 }
 
 .btn-white {

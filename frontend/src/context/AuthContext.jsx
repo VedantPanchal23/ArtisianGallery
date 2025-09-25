@@ -27,18 +27,12 @@ class AuthProvider extends Component {
   }
 
   login = (user, token) => {
-    console.log('AuthContext.login called with:', { user, token });
     localStorage.setItem('arthive_token', token);
     localStorage.setItem('arthive_user', JSON.stringify(user));
     this.setState({
       isAuthenticated: true,
       user: user,
       token: token
-    }, () => {
-      console.log('AuthContext state updated:', {
-        isAuthenticated: this.state.isAuthenticated,
-        user: this.state.user
-      });
     });
   }
 

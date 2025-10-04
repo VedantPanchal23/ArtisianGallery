@@ -84,13 +84,15 @@
 
 /* Hero Section */
 .explore-hero {
-  background: light-dark(
-    linear-gradient(135deg, #4a90e2 0%, #357abd 100%),
-    linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)
-  );
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    url('/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   padding: 4rem 0;
   text-align: center;
-  color: white;
+  color: rgb(255, 255, 255);
 }
 
 .hero-content h1 {

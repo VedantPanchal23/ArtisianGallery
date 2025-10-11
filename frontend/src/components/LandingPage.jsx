@@ -8,14 +8,15 @@ class LandingPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      notification: ''
+      notification: '',
+      showDropdown: false
     };
   }
 
   componentDidMount() {
     // Check for success messages from URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const success = urlParams.get('success');
+    var urlParams = new URLSearchParams(window.location.search);
+    var success = urlParams.get('success');
     
     if (success === 'login') {
       this.setState({ notification: 'Successfully logged in! Welcome to ArtHive.' });
@@ -31,11 +32,45 @@ class LandingPage extends Component {
         window.history.replaceState({}, document.title, window.location.pathname);
       }, 5000);
     }
+
+    // Add click outside listener for dropdown
+    document.addEventListener('click', this.handleClickOutside);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('click', this.handleClickOutside);
+  }
+
+  handleClickOutside = (event) => {
+    if (this.profileMenuRef && !this.profileMenuRef.contains(event.target)) {
+      this.setState({ showDropdown: false });
+    }
+  }
+
+  getInitials = (name) => {
+    if (!name) return 'U';
+    var names = name.split(' ');
+    var initials = names[0].charAt(0);
+    if (names.length > 1) {
+      initials += names[1].charAt(0);
+    }
+    return initials.toUpperCase();
+  }
+
+  toggleDropdown = () => {
+    this.setState({ showDropdown: !this.state.showDropdown });
+  }
+
+  handleLogout = () => {
+    this.setState({ showDropdown: false });
+    this.context.logout();
   }
 
   render() {
-    const { isAuthenticated, user, logout } = this.context;
-    const { notification } = this.state;
+    var isAuthenticated = this.context.isAuthenticated;
+    var user = this.context.user;
+    var logout = this.context.logout;
+    var notification = this.state.notification;
 
     return (
       <div className="landing-page">
@@ -48,22 +83,49 @@ class LandingPage extends Component {
         <nav className="navbar">
           <div className="nav-container">
             <div className="logo">ArtHive</div>
-            <ul className="nav-links">
-              <li><a href="/">Home</a></li>
-              <li><a href="/explore">Explore</a></li>
-              {!isAuthenticated && <li><a href="/login">Login</a></li>}
-              {!isAuthenticated && <li><a href="/signup">Sign Up</a></li>}
-              <li><a href="/about">About Us</a></li>
-              <li><a href="/contact">Contact Us</a></li>
-              {isAuthenticated && <li><a href="/cart">Cart</a></li>}
-              {isAuthenticated && (
+            <div className="nav-right">
+              <ul className="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/explore">Explore</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/contact">Contact Us</a></li>
                 <li>
-                  <button className="logout-btn" onClick={logout}>
-                    Logout
-                  </button>
+                  {!isAuthenticated ? (
+                    <button className="signup-btn" onClick={() => window.location.href = '/signup'}>
+                      Signup/Login
+                    </button>
+                  ) : (
+                    <div className="profile-menu" ref={(ref) => this.profileMenuRef = ref}>
+                      <div className="profile-circle" onClick={this.toggleDropdown}>
+                        {this.getInitials(user?.name)}
+                      </div>
+                      {this.state.showDropdown && (
+                        <div className="dropdown-menu">
+                          <div className="dropdown-item" onClick={() => window.location.href = '/profile'}>
+                            Profile
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/my-orders'}>
+                            My Orders
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/favourites'}>
+                            Favourites
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/my-uploads'}>
+                            My Uploads
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/settings'}>
+                            Settings
+                          </div>
+                          <div className="dropdown-item logout-item" onClick={this.handleLogout}>
+                            Logout
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </li>
-              )}
-            </ul>
+              </ul>
+            </div>
           </div>
         </nav>
 

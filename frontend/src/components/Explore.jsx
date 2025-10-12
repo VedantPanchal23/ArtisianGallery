@@ -12,6 +12,7 @@ class Explore extends Component {
       selectedCategory: 'all',
       priceRange: 'all',
       sortBy: 'newest',
+      showDropdown: false,
       artworks: [
         {
           id: 1,
@@ -97,6 +98,40 @@ class Explore extends Component {
     };
   }
 
+  componentDidMount() {
+    // Add click outside listener for dropdown
+    document.addEventListener('click', this.handleClickOutside);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('click', this.handleClickOutside);
+  }
+
+  handleClickOutside = (event) => {
+    if (this.profileMenuRef && !this.profileMenuRef.contains(event.target)) {
+      this.setState({ showDropdown: false });
+    }
+  }
+
+  getInitials = (name) => {
+    if (!name) return 'U';
+    var names = name.split(' ');
+    var initials = names[0].charAt(0);
+    if (names.length > 1) {
+      initials += names[1].charAt(0);
+    }
+    return initials.toUpperCase();
+  }
+
+  toggleDropdown = () => {
+    this.setState({ showDropdown: !this.state.showDropdown });
+  }
+
+  handleLogout = () => {
+    this.setState({ showDropdown: false });
+    this.context.logout();
+  }
+
   handleSearchChange = (e) => {
     this.setState({ searchTerm: e.target.value });
   }
@@ -176,19 +211,48 @@ class Explore extends Component {
             <div className="logo">
               <a href="/">ArtHive</a>
             </div>
-            <div className="nav-links">
-              <a href="/">Home</a>
-              <a href="/explore" className="active">Explore</a>
-              <a href="/about">About</a>
-              <a href="/contact">Contact</a>
-              {isAuthenticated && <a href="/cart">Cart</a>}
-              {!isAuthenticated && <a href="/login">Login</a>}
-              {!isAuthenticated && <a href="/signup">Sign Up</a>}
-              {isAuthenticated && (
-                <button className="logout-btn" onClick={this.context.logout}>
-                  Logout
-                </button>
-              )}
+            <div className="nav-right">
+              <ul className="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/explore" className="active">Explore</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/contact">Contact Us</a></li>
+                <li>
+                  {!isAuthenticated ? (
+                    <button className="signup-btn" onClick={() => window.location.href = '/signup'}>
+                      Signup/Login
+                    </button>
+                  ) : (
+                    <div className="profile-menu" ref={(ref) => this.profileMenuRef = ref}>
+                      <div className="profile-circle" onClick={this.toggleDropdown}>
+                        {this.getInitials(this.context.user?.name)}
+                      </div>
+                      {this.state.showDropdown && (
+                        <div className="dropdown-menu">
+                          <div className="dropdown-item" onClick={() => window.location.href = '/profile'}>
+                            Profile
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/my-orders'}>
+                            My Orders
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/favourites'}>
+                            Favourites
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/my-uploads'}>
+                            My Uploads
+                          </div>
+                          <div className="dropdown-item" onClick={() => window.location.href = '/settings'}>
+                            Settings
+                          </div>
+                          <div className="dropdown-item logout-item" onClick={this.handleLogout}>
+                            Logout
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              </ul>
             </div>
           </div>
         </nav>

@@ -101,24 +101,34 @@ class LandingPage extends Component {
                       </div>
                       {this.state.showDropdown && (
                         <div className="dropdown-menu">
-                          <div className="dropdown-item" onClick={() => window.location.href = '/profile'}>
-                            Profile
+                          <div className="dropdown-header">
+                            <div className="dropdown-avatar">
+                              {this.getInitials(user?.name)}
+                            </div>
+                            <div className="dropdown-user-info">
+                              <p className="dropdown-name">{user?.name}</p>
+                              <p className="dropdown-email">{user?.email}</p>
+                            </div>
                           </div>
-                          <div className="dropdown-item" onClick={() => window.location.href = '/my-orders'}>
-                            My Orders
-                          </div>
-                          <div className="dropdown-item" onClick={() => window.location.href = '/favourites'}>
-                            Favourites
-                          </div>
-                          <div className="dropdown-item" onClick={() => window.location.href = '/my-uploads'}>
-                            My Uploads
-                          </div>
-                          <div className="dropdown-item" onClick={() => window.location.href = '/settings'}>
-                            Settings
-                          </div>
-                          <div className="dropdown-item logout-item" onClick={this.handleLogout}>
+                          <div className="dropdown-divider"></div>
+                          
+                          {/* Show "My Profile" only for buyers (role: 'user') */}
+                          {user?.role === 'user' && (
+                            <a href="/profile" className="dropdown-item">My Profile</a>
+                          )}
+                          
+                          {/* Show "My Uploads" only for artists */}
+                          {user?.role === 'artist' && (
+                            <a href="/my-uploads" className="dropdown-item">My Uploads</a>
+                          )}
+                          
+                          <a href="/explore" className="dropdown-item">Explore</a>
+                          <a href="/cart" className="dropdown-item">Cart</a>
+                          
+                          <div className="dropdown-divider"></div>
+                          <button onClick={this.handleLogout} className="dropdown-item logout-item">
                             Logout
-                          </div>
+                          </button>
                         </div>
                       )}
                     </div>

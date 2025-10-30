@@ -17,23 +17,46 @@ class AuthProvider extends Component {
     const token = localStorage.getItem('arthive_token');
     const user = localStorage.getItem('arthive_user');
     
+    console.log('AuthContext - Checking localStorage');
+    console.log('Token exists:', !!token);
+    console.log('User exists:', !!user);
+    
     if (token && user) {
-      this.setState({
-        isAuthenticated: true,
-        user: JSON.parse(user),
-        token: token
-      });
+      try {
+        const parsedUser = JSON.parse(user);
+        console.log('AuthContext - Setting authenticated state');
+        console.log('User data:', parsedUser);
+        this.setState({
+          isAuthenticated: true,
+          user: parsedUser,
+          token: token
+        });
+      } catch (error) {
+        console.error('AuthContext - Error parsing user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('arthive_token');
+        localStorage.removeItem('arthive_user');
+      }
+    } else {
+      console.log('AuthContext - No valid authentication data found');
     }
   }
 
   login = (user, token) => {
+    console.log('AuthContext - Login called');
+    console.log('User:', user);
+    console.log('Token:', token);
+    
     localStorage.setItem('arthive_token', token);
     localStorage.setItem('arthive_user', JSON.stringify(user));
+    
     this.setState({
       isAuthenticated: true,
       user: user,
       token: token
     });
+    
+    console.log('AuthContext - State updated, isAuthenticated:', true);
   }
 
   logout = () => {

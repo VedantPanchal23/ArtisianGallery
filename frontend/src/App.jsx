@@ -8,6 +8,8 @@ import ForgotPassword from './components/ForgotPassword';
 import ContactUs from './components/ContactUs';
 import AboutUs from './components/AboutUs';
 import Explore from './components/Explore';
+import UserProfile from './components/UserProfile';
+import AuthDebug from './components/AuthDebug';
 import './App.css';
 
 class App extends Component {
@@ -19,6 +21,8 @@ class App extends Component {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/explore" element={<Explore />} />
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/auth-debug" element={<AuthDebug />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />

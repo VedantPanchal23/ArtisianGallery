@@ -103,7 +103,7 @@ class Login extends Component {
             </a>
             
             <div className="signup-section">
-              <p>Don't have an account? <a href="/signup">Sign up</a></p>
+              <p>New to ArtHive? <a href="/signup" className="signup-link">Create Account</a></p>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ Overview
 
 Project name: ArtHive — NFT-like Digital Art Marketplace (no blockchain)
 Goal: Centralized marketplace where artists upload & sell digital art, users browse/like/favorite/buy art, admins moderate content and manage payouts.
-Tech stack: MERN (MongoDB, Express, React, Node). Storage via MongoDB. Payments via Stripe (recommended) or Razorpay.
+Tech stack: MERN (MongoDB, Express, React, Node). Storage via Cloudinary or S3. Payments via Stripe (recommended) or Razorpay.
 
 1. Scope & Priorities (MVP vs Optional)
 

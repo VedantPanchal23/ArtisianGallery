@@ -157,7 +157,7 @@ class Signup extends Component {
             </form>
             
             <div className="login-section">
-              <p>Have an account? <a href="/login">Log in</a></p>
+              <p>Already have an account? <a href="/login" className="login-link">Login</a></p>
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+require('dotenv').config();
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -9,15 +10,26 @@ var cors = require('cors');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
+var { testEmailConfig } = require('./utils/emailService');
 
 var app = express();
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/arthive', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
+mongoose.connect('mongodb://localhost:27017/arthive').then(() => {
   console.log('Connected to MongoDB');
+  
+  // Test email configuration on startup
+  testEmailConfig()
+    .then(function(isConfigured) {
+      if (isConfigured) {
+        console.log('✅ Email service is ready for production use');
+      } else {
+        console.log('⚠️ Email service not configured - will use console logging');
+      }
+    })
+    .catch(function(error) {
+      console.error('❌ Email service test failed:', error);
+    });
 }).catch((error) => {
   console.error('MongoDB connection error:', error);
 });

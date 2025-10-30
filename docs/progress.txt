@@ -61,21 +61,42 @@ Goal: Centralized marketplace where artists upload & sell digital art, users bro
 - Proper error handling
 
 #### 4. Forgot Password Page (ForgotPassword.jsx) ✅
-**Status**: Newly implemented, Instagram-style
+**Status**: OTP-based password reset with real email service
 **Features**:
-- Lock icon graphic (CSS-based)
-- "Trouble with logging in?" messaging
-- Email/username input field
-- "Send login link" functionality
-- Success state with confirmation message
-- Links to create new account and back to login
-- Matches Instagram's forgot password flow
+- 3-step workflow: Send OTP → Verify OTP → Reset Password
+- Individual digit OTP input boxes (6 digits)
+- Real email service using Gmail SMTP
+- Beautiful HTML email templates
+- Token-based verification system
+- Professional user experience
 
 **Technical Details**:
-- Class component with conditional rendering
-- State management for form submission
-- Custom CSS lock icon
-- Responsive design
+- Class component with step-based state management
+- Individual OTP input fields with auto-focus
+- Paste support for OTP codes
+- Backend integration with email service
+- Enhanced token validation for security
+
+#### 5. User Profile Page (UserProfile.jsx) ✅
+**Status**: Newly implemented with dashboard functionality
+**Features**:
+- Same navbar as other pages with search bar and profile dropdown
+- "My Dashboard" heading
+- Three tabs: Purchased, Favourites, Settings
+- "My Purchased Art" section with responsive artwork grid
+- Favourites section for saved artworks
+- Settings tab for profile management (name, email, bio)
+- Protected route (requires authentication)
+- Real-time user data display
+
+**Technical Details**:
+- Class component following DAX.txt coding style
+- Tab-based navigation system
+- Responsive grid layout for artwork cards
+- Form handling for settings updates
+- API integration for profile management
+- Authentication context integration
+- Professional UI matching project design system
 
 ### ROUTING SYSTEM ✅
 **Status**: Complete with React Router DOM
@@ -83,7 +104,8 @@ Goal: Centralized marketplace where artists upload & sell digital art, users bro
 - `/` - Landing Page
 - `/login` - Login Page
 - `/signup` - Signup Page
-- `/forgot-password` - Forgot Password Page
+- `/forgot-password` - Forgot Password Page (OTP-based)
+- `/profile` - User Profile Dashboard ✅ NEW
 
 **Navigation**:
 - Proper link integration in navbar
@@ -136,7 +158,13 @@ frontend/
 │   │   ├── LandingPage.jsx/css ✅
 │   │   ├── Login.jsx/css ✅
 │   │   ├── Signup.jsx/css ✅
-│   │   └── ForgotPassword.jsx/css ✅
+│   │   ├── ForgotPassword.jsx/css ✅
+│   │   ├── UserProfile.jsx/css ✅ NEW
+│   │   ├── Explore.jsx/css ✅
+│   │   ├── ContactUs.jsx/css ✅
+│   │   └── AboutUs.jsx/css ✅
+│   ├── context/
+│   │   └── AuthContext.jsx ✅
 │   ├── App.jsx ✅ (Routing setup)
 │   ├── App.css ✅
 │   ├── main.jsx ✅
@@ -144,10 +172,19 @@ frontend/
 ├── package.json ✅
 └── vite.config.js ✅
 
-backend/ (Basic Express setup)
+backend/
 ├── app.js ✅
 ├── package.json ✅
-└── routes/ ✅
+├── models/
+│   └── User.js ✅
+├── routes/
+│   ├── auth.js ✅
+│   ├── users.js ✅ UPDATED
+│   └── index.js ✅
+├── middleware/
+│   └── auth.js ✅
+└── utils/
+    └── emailService.js ✅
 ```
 
 ## BACKEND DEVELOPMENT: COMPLETE ✅
@@ -180,6 +217,8 @@ backend/ (Basic Express setup)
 - **Loading States**: UI feedback during API calls
 - **Token Storage**: localStorage integration
 - **Authentication Flow**: Complete login/signup/forgot password cycle
+- **Email Service**: Real Gmail SMTP for OTP delivery
+- **Profile Management**: User dashboard with settings ✅ NEW
 
 ### BACKEND TECHNICAL STACK ✅
 - **Express.js 4.16.1**: Web framework
@@ -190,13 +229,19 @@ backend/ (Basic Express setup)
 - **Helmet**: Security headers
 - **CORS**: Cross-origin requests
 - **express-rate-limit**: API rate limiting
+- **nodemailer**: Email service for OTP delivery ✅
 
 ### API DOCUMENTATION ✅
 **File**: `docs/api-endpoints.txt`
 **Endpoints**:
 - `POST /api/v1/auth/register` - User registration
 - `POST /api/v1/auth/login` - User authentication
-- `POST /api/v1/auth/forgot-password` - Password reset request
+- `POST /api/v1/auth/send-otp` - Send OTP for password reset
+- `POST /api/v1/auth/verify-otp` - Verify OTP code
+- `POST /api/v1/auth/reset-password` - Reset password with verified token
+- `GET /api/v1/users/profile` - Get user profile ✅ NEW
+- `PUT /api/v1/users/profile` - Update user profile ✅ NEW
+- `GET /api/v1/users/purchased` - Get purchased artworks ✅ NEW
 
 ### ESTIMATED COMPLETION:
 - **Phase 1**: Frontend UI/UX - ✅ COMPLETE

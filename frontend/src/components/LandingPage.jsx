@@ -117,9 +117,12 @@ class LandingPage extends Component {
                             <a href="/profile" className="dropdown-item">My Profile</a>
                           )}
                           
-                          {/* Show "My Uploads" only for artists */}
+                          {/* Show "My Uploads" and "Upload Artwork" for artists */}
                           {user?.role === 'artist' && (
-                            <a href="/my-uploads" className="dropdown-item">My Uploads</a>
+                            <>
+                              <a href="/upload-artwork" className="dropdown-item">Upload Artwork</a>
+                              <a href="/my-uploads" className="dropdown-item">My Uploads</a>
+                            </>
                           )}
                           
                           <a href="/explore" className="dropdown-item">Explore</a>

@@ -13,94 +13,101 @@ class Explore extends Component {
       priceRange: 'all',
       sortBy: 'newest',
       showDropdown: false,
-      artworks: [
-        {
-          id: 1,
-          title: "Digital Sunset",
-          artist: "Sarah Chen",
-          price: 350,
-          category: "landscape",
-          image: "/api/placeholder/300/400",
-          tags: ["sunset", "digital", "landscape"],
-          createdAt: "2024-12-01"
-        },
-        {
-          id: 2,
-          title: "Neon Dreams",
-          artist: "Alex Rodriguez",
-          price: 650,
-          category: "abstract",
-          image: "/api/placeholder/300/400",
-          tags: ["neon", "cyberpunk", "abstract"],
-          createdAt: "2024-11-28"
-        },
-        {
-          id: 3,
-          title: "Portrait Study #3",
-          artist: "Maya Patel",
-          price: 280,
-          category: "portrait",
-          image: "/api/placeholder/300/400",
-          tags: ["portrait", "study", "realistic"],
-          createdAt: "2024-11-25"
-        },
-        {
-          id: 4,
-          title: "Cosmic Journey",
-          artist: "David Kim",
-          price: 750,
-          category: "space",
-          image: "/api/placeholder/300/400",
-          tags: ["space", "cosmic", "journey"],
-          createdAt: "2024-11-20"
-        },
-        {
-          id: 5,
-          title: "Urban Fragments",
-          artist: "Lisa Zhang",
-          price: 425,
-          category: "urban",
-          image: "/api/placeholder/300/400",
-          tags: ["urban", "city", "fragments"],
-          createdAt: "2024-11-15"
-        },
-        {
-          id: 6,
-          title: "Botanical Dreams",
-          artist: "Carlos Mendez",
-          price: 320,
-          category: "nature",
-          image: "/api/placeholder/300/400",
-          tags: ["botanical", "nature", "dreams"],
-          createdAt: "2024-11-10"
-        },
-        {
-          id: 7,
-          title: "Geometric Harmony",
-          artist: "Anna Kowalski",
-          price: 680,
-          category: "abstract",
-          image: "/api/placeholder/300/400",
-          tags: ["geometric", "harmony", "abstract"],
-          createdAt: "2024-11-05"
-        },
-        {
-          id: 8,
-          title: "Ocean Depths",
-          artist: "James Wilson",
-          price: 580,
-          category: "landscape",
-          image: "/api/placeholder/300/400",
-          tags: ["ocean", "depths", "underwater"],
-          createdAt: "2024-10-30"
-        }
-      ]
+      artworks: [],
+      isLoading: true,
+      error: null,
+      currentPage: 1,
+      totalPages: 1,
+      totalArtworks: 0
     };
   }
 
   componentDidMount() {
     // Add click outside listener for dropdown
     document.addEventListener('click', this.handleClickOutside);
+    // Load artworks from API
+    this.loadArtworks();
+  }
+
+  loadArtworks = async () => {
+    try {
+      this.setState({ isLoading: true, error: null });
+
+      // Build query parameters
+      var params = new URLSearchParams();
+      
+      if (this.state.searchTerm) {
+        params.append('search', this.state.searchTerm);
+      }
+      
+      if (this.state.selectedCategory && this.state.selectedCategory !== 'all') {
+        params.append('category', this.state.selectedCategory);
+      }
+      
+      // Price range filtering
+      if (this.state.priceRange !== 'all') {
+        switch (this.state.priceRange) {
+          case 'under300':
+            params.append('maxPrice', '300');
+            break;
+          case '300to500':
+            params.append('minPrice', '300');
+            params.append('maxPrice', '500');
+            break;
+          case '500to700':
+            params.append('minPrice', '500');
+            params.append('maxPrice', '700');
+            break;
+          case 'over700':
+            params.append('minPrice', '700');
+            break;
+        }
+      }
+      
+      // Sorting
+      var sortParam = this.state.sortBy;
+      if (sortParam === 'price_low') sortParam = 'price-low';
+      if (sortParam === 'price_high') sortParam = 'price-high';
+      params.append('sort', sortParam);
+      
+      params.append('page', this.state.currentPage);
+      params.append('limit', '12');
+      params.append('status', 'approved');
+
+      var token = localStorage.getItem('arthive_token');
+      var headers = {
+        'Content-Type': 'application/json'
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      var response = await fetch(`http://localhost:3000/api/v1/artworks?${params.toString()}`, {
+        headers: headers
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load artworks');
+      }
+
+      var data = await response.json();
+      
+      this.setState({
+        artworks: data.artworks || [],
+        totalPages: data.pagination?.pages || 1,
+        totalArtworks: data.pagination?.total || 0,
+        isLoading: false
+      });
+
+    } catch (error) {
+      console.error('Error loading artworks:', error);
+      this.setState({
+        error: error.message,
+        isLoading: false,
+        artworks: []
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -133,75 +140,44 @@ class Explore extends Component {
   }
 
   handleSearchChange = (e) => {
-    this.setState({ searchTerm: e.target.value });
+    this.setState({ searchTerm: e.target.value }, () => {
+      // Reload artworks after a short delay (debouncing)
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = setTimeout(() => {
+        this.setState({ currentPage: 1 }, this.loadArtworks);
+      }, 500);
+    });
   }
 
   handleCategoryChange = (e) => {
-    this.setState({ selectedCategory: e.target.value });
+    this.setState({ selectedCategory: e.target.value, currentPage: 1 }, this.loadArtworks);
   }
 
   handlePriceRangeChange = (e) => {
-    this.setState({ priceRange: e.target.value });
+    this.setState({ priceRange: e.target.value, currentPage: 1 }, this.loadArtworks);
   }
 
   handleSortChange = (e) => {
-    this.setState({ sortBy: e.target.value });
+    this.setState({ sortBy: e.target.value, currentPage: 1 }, this.loadArtworks);
   }
 
-  getFilteredAndSortedArtworks = () => {
-    let filtered = [...this.state.artworks];
+  formatPrice = (price, currency) => {
+    var symbols = {
+      'INR': '₹',
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£'
+    };
+    return `${symbols[currency] || '₹'}${parseFloat(price).toFixed(2)}`;
+  }
 
-    // Filter by search term
-    if (this.state.searchTerm) {
-      filtered = filtered.filter(artwork => 
-        artwork.title.toLowerCase().includes(this.state.searchTerm.toLowerCase()) ||
-        artwork.artist.toLowerCase().includes(this.state.searchTerm.toLowerCase()) ||
-        artwork.tags.some(tag => tag.toLowerCase().includes(this.state.searchTerm.toLowerCase()))
-      );
-    }
-
-    // Filter by category
-    if (this.state.selectedCategory !== 'all') {
-      filtered = filtered.filter(artwork => artwork.category === this.state.selectedCategory);
-    }
-
-    // Filter by price range
-    if (this.state.priceRange !== 'all') {
-      filtered = filtered.filter(artwork => {
-        switch (this.state.priceRange) {
-          case 'under300': return artwork.price < 300;
-          case '300to500': return artwork.price >= 300 && artwork.price <= 500;
-          case '500to700': return artwork.price >= 500 && artwork.price <= 700;
-          case 'over700': return artwork.price > 700;
-          default: return true;
-        }
-      });
-    }
-
-    // Sort artworks
-    filtered.sort((a, b) => {
-      switch (this.state.sortBy) {
-        case 'newest':
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        case 'oldest':
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        case 'price_low':
-          return a.price - b.price;
-        case 'price_high':
-          return b.price - a.price;
-        case 'title':
-          return a.title.localeCompare(b.title);
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
+  handleArtworkClick = (artworkId) => {
+    window.location.href = `/artwork/${artworkId}`;
   }
 
   render() {
-    const { isAuthenticated } = this.context;
-    const filteredArtworks = this.getFilteredAndSortedArtworks();
+    var { isAuthenticated } = this.context;
+    var { artworks, isLoading, error, totalArtworks } = this.state;
 
     return (
       <div className="explore-page">
@@ -245,9 +221,12 @@ class Explore extends Component {
                             <a href="/profile" className="dropdown-item">My Profile</a>
                           )}
                           
-                          {/* Show "My Uploads" only for artists */}
+                          {/* Show "My Uploads" and "Upload Artwork" for artists */}
                           {this.context.user?.role === 'artist' && (
-                            <a href="/my-uploads" className="dropdown-item">My Uploads</a>
+                            <>
+                              <a href="/upload-artwork" className="dropdown-item">Upload Artwork</a>
+                              <a href="/my-uploads" className="dropdown-item">My Uploads</a>
+                            </>
                           )}
                           
                           <a href="/explore" className="dropdown-item">Explore</a>
@@ -291,12 +270,18 @@ class Explore extends Component {
             <div className="filter-controls">
               <select value={this.state.selectedCategory} onChange={this.handleCategoryChange}>
                 <option value="all">All Categories</option>
+                <option value="digital">Digital Art</option>
                 <option value="abstract">Abstract</option>
                 <option value="landscape">Landscape</option>
                 <option value="portrait">Portrait</option>
+                <option value="photography">Photography</option>
+                <option value="illustration">Illustration</option>
+                <option value="3d">3D Art</option>
+                <option value="painting">Painting</option>
                 <option value="nature">Nature</option>
                 <option value="urban">Urban</option>
                 <option value="space">Space</option>
+                <option value="other">Other</option>
               </select>
 
               <select value={this.state.priceRange} onChange={this.handlePriceRangeChange}>
@@ -323,40 +308,71 @@ class Explore extends Component {
           <div className="artworks-container">
             <div className="results-info">
               <h2>
-                {filteredArtworks.length} {filteredArtworks.length === 1 ? 'artwork' : 'artworks'} found
+                {isLoading ? 'Loading...' : `${totalArtworks} ${totalArtworks === 1 ? 'artwork' : 'artworks'} found`}
               </h2>
             </div>
             
-            <div className="artworks-grid">
-              {filteredArtworks.map(artwork => (
-                <div key={artwork.id} className="artwork-card">
-                  <div className="artwork-image">
-                    <img src={artwork.image} alt={artwork.title} />
-                    <div className="artwork-overlay">
-                      <button className="view-btn">View Details</button>
-                      {isAuthenticated && (
-                        <button className="add-to-cart-btn">Add to Cart</button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="artwork-info">
-                    <h3 className="artwork-title">{artwork.title}</h3>
-                    <p className="artwork-artist">by {artwork.artist}</p>
-                    <div className="artwork-tags">
-                      {artwork.tags.map(tag => (
-                        <span key={tag} className="tag">#{tag}</span>
-                      ))}
-                    </div>
-                    <div className="artwork-price">₹{artwork.price}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {isLoading && (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading artworks...</p>
+              </div>
+            )}
 
-            {filteredArtworks.length === 0 && (
+            {error && (
+              <div className="error-container">
+                <p className="error-message">{error}</p>
+                <button onClick={this.loadArtworks} className="retry-btn">Try Again</button>
+              </div>
+            )}
+            
+            {!isLoading && !error && artworks.length > 0 && (
+              <div className="artworks-grid">
+                {artworks.map(artwork => (
+                  <div key={artwork._id} className="artwork-card" onClick={() => this.handleArtworkClick(artwork._id)}>
+                    <div className="artwork-image">
+                      <img src={artwork.thumbnailUrl || artwork.imageUrl} alt={artwork.title} />
+                      <div className="artwork-overlay">
+                        <button className="view-btn">View Details</button>
+                      </div>
+                    </div>
+                    <div className="artwork-info">
+                      <h3 className="artwork-title">{artwork.title}</h3>
+                      <p className="artwork-artist">by {artwork.artistName}</p>
+                      {artwork.tags && artwork.tags.length > 0 && (
+                        <div className="artwork-tags">
+                          {artwork.tags.slice(0, 3).map((tag, index) => (
+                            <span key={index} className="tag">#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="artwork-footer">
+                        <div className="artwork-price">{this.formatPrice(artwork.price, artwork.currency)}</div>
+                        <div className="artwork-stats">
+                          <span>❤️ {artwork.likesCount || 0}</span>
+                          <span>👁 {artwork.viewsCount || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!isLoading && !error && artworks.length === 0 && (
               <div className="no-results">
                 <h3>No artworks found</h3>
                 <p>Try adjusting your search criteria or browse all categories.</p>
+                <button onClick={() => {
+                  this.setState({
+                    searchTerm: '',
+                    selectedCategory: 'all',
+                    priceRange: 'all',
+                    sortBy: 'newest'
+                  }, this.loadArtworks);
+                }} className="reset-filters-btn">
+                  Reset Filters
+                </button>
               </div>
             )}
           </div>

@@ -58,7 +58,7 @@ const validateLoginData = (data) => {
 const generateToken = (userId) => {
   return jwt.sign(
     { userId: userId },
-    'arthive_secret_key',
+    process.env.JWT_SECRET || 'arthive_secret_key',
     { expiresIn: '7d' }
   );
 };

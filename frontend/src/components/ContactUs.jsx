@@ -24,7 +24,9 @@ class ContactUs extends Component {
   handleSubmit = async (e) => {
     e.preventDefault();
     
-    const { name, email, body } = this.state;
+    var name = this.state.name;
+    var email = this.state.email;
+    var body = this.state.body;
     
     if (!name.trim() || !email.trim() || !body.trim()) {
       this.setState({ error: 'All fields are required.' });
@@ -32,7 +34,7 @@ class ContactUs extends Component {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       this.setState({ error: 'Please enter a valid email address.' });
       return;
@@ -59,7 +61,12 @@ class ContactUs extends Component {
   }
 
   render() {
-    const { name, email, body, loading, success, error } = this.state;
+    var name = this.state.name;
+    var email = this.state.email;
+    var body = this.state.body;
+    var loading = this.state.loading;
+    var success = this.state.success;
+    var error = this.state.error;
 
     if (success) {
       return (

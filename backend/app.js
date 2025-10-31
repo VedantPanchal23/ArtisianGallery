@@ -10,6 +10,9 @@ var cors = require('cors');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
+var artworksRouter = require('./routes/artworks');
+var ordersRouter = require('./routes/orders');
+var adminRouter = require('./routes/admin');
 var { testEmailConfig } = require('./utils/emailService');
 
 var app = express();
@@ -51,8 +54,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/artworks', artworksRouter);
+app.use('/api/v1/orders', ordersRouter);
+app.use('/api/v1/admin', adminRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -79,7 +79,28 @@ const authorizeRole = (...roles) => {
   };
 };
 
-module.exports = {
-  authenticateToken,
-  authorizeRole
+// Optional authentication - doesn't fail if no token (for browse/explore only)
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'arthive_secret_key');
+      const user = await User.findById(decoded.userId);
+      if (user && !user.isBlocked) {
+        req.user = user;
+      }
+    }
+    
+    next();
+  } catch (error) {
+    // If token is invalid, just continue without user
+    next();
+  }
 };
+
+module.exports = authenticateToken;
+module.exports.authenticateToken = authenticateToken;
+module.exports.authorizeRole = authorizeRole;
+module.exports.optionalAuth = optionalAuth;

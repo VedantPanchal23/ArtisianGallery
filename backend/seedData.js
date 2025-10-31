@@ -179,11 +179,8 @@ async function seedDatabase() {
     var createdUsers = [];
     
     for (var userData of usersData) {
-      var hashedPassword = await bcrypt.hash(userData.password, 12);
-      var user = new User({
-        ...userData,
-        password: hashedPassword
-      });
+      // Don't hash manually - let the User model's pre-save hook handle it
+      var user = new User(userData);
       await user.save();
       createdUsers.push(user);
       console.log(`✅ Created user: ${user.name} (${user.role})`);

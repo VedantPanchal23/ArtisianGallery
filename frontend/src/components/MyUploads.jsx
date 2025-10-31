@@ -12,6 +12,7 @@ class MyUploads extends Component {
       isLoading: true,
       error: null,
       showDropdown: false,
+      isCheckingAuth: true,
       stats: {
         totalUploads: 0,
         approvedCount: 0,
@@ -29,16 +30,46 @@ class MyUploads extends Component {
   }
 
   componentDidMount() {
-    var user = this.context.user;
+    document.addEventListener('click', this.handleClickOutside);
     
+    // Give AuthContext time to load from localStorage
+    setTimeout(() => {
+      this.checkAuthentication();
+    }, 100);
+  }
+
+  checkAuthentication = () => {
+    var user = this.context.user;
+    var token = localStorage.getItem('arthive_token');
+    var storedUser = localStorage.getItem('arthive_user');
+
+    // If context hasn't loaded yet but localStorage has data, wait
+    if (!user && token && storedUser) {
+      setTimeout(() => {
+        this.checkAuthentication();
+      }, 200);
+      return;
+    }
+
+    // Parse stored user if context user is not available
+    var currentUser = user;
+    if (!currentUser && storedUser) {
+      try {
+        currentUser = JSON.parse(storedUser);
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+      }
+    }
+
     // Check if user is artist or admin
-    if (!user || (user.role !== 'artist' && user.role !== 'admin')) {
+    if (!currentUser || (currentUser.role !== 'artist' && currentUser.role !== 'admin')) {
+      alert('My Uploads is only available for artists and admins.');
       window.location.href = '/';
       return;
     }
 
+    this.setState({ isCheckingAuth: false });
     this.loadArtworks();
-    document.addEventListener('click', this.handleClickOutside);
   }
 
   componentWillUnmount() {
@@ -207,8 +238,16 @@ class MyUploads extends Component {
 
   render() {
     var user = this.context.user;
-    var { artworks, isLoading, error, showDropdown, stats, filterStatus, showDeleteModal, deletingArtwork } = this.state;
+    var { artworks, isLoading, error, showDropdown, stats, filterStatus, showDeleteModal, deletingArtwork, isCheckingAuth } = this.state;
     var filteredArtworks = this.getFilteredArtworks();
+
+    if (isCheckingAuth) {
+      return (
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+          <p>Loading...</p>
+        </div>
+      );
+    }
 
     return (
       <div className="my-uploads-page">

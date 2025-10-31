@@ -90,7 +90,7 @@ router.put('/profile', authenticateToken, async function(req, res, next) {
 });
 
 /* GET user's purchased artworks - Protected route */
-router.get('/purchased', authenticateToken, async function(req, res, next) {
+router.get('/purchased-artworks', authenticateToken, async function(req, res, next) {
   try {
     var userId = req.user._id;
     

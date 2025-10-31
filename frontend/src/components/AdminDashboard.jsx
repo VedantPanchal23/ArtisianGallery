@@ -29,23 +29,55 @@ class AdminDashboard extends Component {
       // Reject modal
       showRejectModal: false,
       rejectingArtwork: null,
-      rejectionReason: ''
+      rejectionReason: '',
+      
+      // Auth check
+      isCheckingAuth: true
     };
   }
 
   componentDidMount() {
-    var user = this.context.user;
+    document.addEventListener('click', this.handleClickOutside);
     
+    // Give AuthContext time to load from localStorage
+    setTimeout(() => {
+      this.checkAuthentication();
+    }, 100);
+  }
+
+  checkAuthentication = () => {
+    var user = this.context.user;
+    var token = localStorage.getItem('arthive_token');
+    var storedUser = localStorage.getItem('arthive_user');
+
+    // If context hasn't loaded yet but localStorage has data, wait
+    if (!user && token && storedUser) {
+      setTimeout(() => {
+        this.checkAuthentication();
+      }, 200);
+      return;
+    }
+
+    // Parse stored user if context user is not available
+    var currentUser = user;
+    if (!currentUser && storedUser) {
+      try {
+        currentUser = JSON.parse(storedUser);
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+      }
+    }
+
     // Check if user is admin
-    if (!user || user.role !== 'admin') {
+    if (!currentUser || currentUser.role !== 'admin') {
+      alert('Admin Dashboard is only available for administrators.');
       window.location.href = '/';
       return;
     }
 
+    this.setState({ isCheckingAuth: false });
     this.loadPendingArtworks();
     this.loadAnalytics();
-    
-    document.addEventListener('click', this.handleClickOutside);
   }
 
   componentWillUnmount() {
@@ -305,7 +337,15 @@ class AdminDashboard extends Component {
 
   render() {
     var user = this.context.user;
-    var { activeTab, showDropdown, pendingArtworks, isLoadingPending, pendingError, analytics, isLoadingAnalytics, users, isLoadingUsers, usersError, showRejectModal, rejectingArtwork, rejectionReason } = this.state;
+    var { activeTab, showDropdown, pendingArtworks, isLoadingPending, pendingError, analytics, isLoadingAnalytics, users, isLoadingUsers, usersError, showRejectModal, rejectingArtwork, rejectionReason, isCheckingAuth } = this.state;
+
+    if (isCheckingAuth) {
+      return (
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+          <p>Loading...</p>
+        </div>
+      );
+    }
 
     return (
       <div className="admin-dashboard-page">

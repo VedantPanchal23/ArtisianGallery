@@ -53,8 +53,7 @@ const transactionSchema = new mongoose.Schema({
   transactionId: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   billingAddress: {
     fullName: String,
@@ -89,7 +88,7 @@ const transactionSchema = new mongoose.Schema({
 // Indexes for better query performance
 transactionSchema.index({ buyer: 1, createdAt: -1 });
 transactionSchema.index({ 'artworks.artwork': 1 });
-transactionSchema.index({ transactionId: 1 });
+// transactionId already has unique:true which creates an index automatically
 
 // Generate unique transaction ID
 transactionSchema.statics.generateTransactionId = function() {

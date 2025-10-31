@@ -21,20 +21,52 @@ class UploadArtwork extends Component {
       uploadProgress: 0,
       errors: {},
       successMessage: '',
-      showDropdown: false
+      showDropdown: false,
+      isCheckingAuth: true
     };
     this.fileInputRef = React.createRef();
   }
 
   componentDidMount() {
-    // Check if user is artist
+    document.addEventListener('click', this.handleClickOutside);
+    
+    // Give AuthContext time to load from localStorage
+    setTimeout(() => {
+      this.checkAuthentication();
+    }, 100);
+  }
+
+  checkAuthentication = () => {
     var user = this.context.user;
-    if (!user || (user.role !== 'artist' && user.role !== 'admin')) {
+    var token = localStorage.getItem('arthive_token');
+    var storedUser = localStorage.getItem('arthive_user');
+
+    // If context hasn't loaded yet but localStorage has data, wait
+    if (!user && token && storedUser) {
+      setTimeout(() => {
+        this.checkAuthentication();
+      }, 200);
+      return;
+    }
+
+    // Parse stored user if context user is not available
+    var currentUser = user;
+    if (!currentUser && storedUser) {
+      try {
+        currentUser = JSON.parse(storedUser);
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+      }
+    }
+
+    // Check if user is artist or admin
+    if (!currentUser || (currentUser.role !== 'artist' && currentUser.role !== 'admin')) {
+      alert('Upload Artwork is only available for artists and admins.');
       window.location.href = '/';
       return;
     }
 
-    document.addEventListener('click', this.handleClickOutside);
+    this.setState({ isCheckingAuth: false });
   }
 
   componentWillUnmount() {
@@ -283,8 +315,17 @@ class UploadArtwork extends Component {
       uploadProgress,
       errors,
       successMessage,
-      showDropdown
+      showDropdown,
+      isCheckingAuth
     } = this.state;
+
+    if (isCheckingAuth) {
+      return (
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+          <p>Loading...</p>
+        </div>
+      );
+    }
 
     return (
       <div className="upload-artwork-page">

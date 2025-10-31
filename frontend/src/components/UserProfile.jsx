@@ -17,6 +17,14 @@ class UserProfile extends Component {
       purchaseError: null,
       isLoadingFavorites: false,
       favoritesError: null,
+      purchasedArt: [
+        // Mock data - will be replaced with real API data
+        { id: 1, title: 'Artwork 1', image: '', artist: 'Artist Name', price: '$100' },
+        { id: 2, title: 'Artwork 2', image: '', artist: 'Artist Name', price: '$150' },
+        { id: 3, title: 'Artwork 3', image: '', artist: 'Artist Name', price: '$200' },
+        { id: 4, title: 'Artwork 4', image: '', artist: 'Artist Name', price: '$120' }
+      ],
+      favourites: [],
       userSettings: {
         name: '',
         email: '',
@@ -321,6 +329,8 @@ class UserProfile extends Component {
         </div>
       );
     }
+  renderPurchasedTab() {
+    var purchasedArt = this.state.purchasedArt;
     
     return (
       <div className="tab-content">
@@ -349,6 +359,8 @@ class UserProfile extends Component {
                   >
                     View Artwork
                   </button>
+                  <p className="artist-name">{art.artist}</p>
+                  <p className="price">{art.price}</p>
                 </div>
               </div>
             ))
@@ -360,6 +372,7 @@ class UserProfile extends Component {
               <button className="btn-explore" onClick={() => window.location.href = '/explore'}>
                 Browse Artworks
               </button>
+              <p>No purchased artworks yet</p>
             </div>
           )}
         </div>
@@ -369,6 +382,7 @@ class UserProfile extends Component {
 
   renderFavouritesTab() {
     var { favourites, isLoadingFavorites, favoritesError } = this.state;
+    var favourites = this.state.favourites;
     
     return (
       <div className="tab-content">
@@ -420,6 +434,31 @@ class UserProfile extends Component {
             )}
           </div>
         )}
+        <div className="artwork-grid">
+          {favourites.length > 0 ? (
+            favourites.map((art) => (
+              <div key={art.id} className="artwork-card">
+                <div className="artwork-image-placeholder">
+                  {art.image ? (
+                    <img src={art.image} alt={art.title} />
+                  ) : (
+                    <div className="placeholder-content">
+                      <span>🎨</span>
+                    </div>
+                  )}
+                </div>
+                <div className="artwork-details">
+                  <h3>{art.title}</h3>
+                  <p className="artist-name">{art.artist}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state">
+              <p>No favourite artworks yet</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

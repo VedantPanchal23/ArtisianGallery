@@ -76,6 +76,16 @@ const artworkSchema = new mongoose.Schema({
     default: 0,
     index: true
   },
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  totalReviews: {
+    type: Number,
+    default: 0
+  },
   viewsCount: {
     type: Number,
     default: 0
@@ -123,11 +133,10 @@ const artworkSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for better query performance
+// Indexes for better query performance (removed duplicate - see compound indexes below)
 artworkSchema.index({ title: 'text', description: 'text', tags: 'text' });
 artworkSchema.index({ price: 1 });
 artworkSchema.index({ createdAt: -1 });
-artworkSchema.index({ artist: 1, status: 1 });
 
 // Virtual for checking if artwork is liked by a user
 artworkSchema.methods.isLikedBy = function(userId) {
@@ -161,5 +170,30 @@ artworkSchema.statics.findWithArtist = function(query) {
 artworkSchema.statics.findApproved = function(query = {}) {
   return this.find({ ...query, status: 'approved', isActive: true });
 };
+
+// Create text index for search optimization
+artworkSchema.index({ 
+  title: 'text', 
+  description: 'text', 
+  tags: 'text',
+  artistName: 'text',
+  category: 'text'
+}, {
+  weights: {
+    title: 10,
+    tags: 5,
+    artistName: 3,
+    category: 2,
+    description: 1
+  },
+  name: 'artwork_text_search'
+});
+
+// Create compound indexes for common queries
+artworkSchema.index({ status: 1, isActive: 1, createdAt: -1 });
+artworkSchema.index({ artist: 1, status: 1 });
+artworkSchema.index({ category: 1, status: 1, price: 1 });
+artworkSchema.index({ likesCount: -1, status: 1 });
+artworkSchema.index({ salesCount: -1, status: 1 });
 
 module.exports = mongoose.model('Artwork', artworkSchema);

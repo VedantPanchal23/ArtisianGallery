@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import FollowButton from './FollowButton';
+import ReviewList from './ReviewList';
+import RatingStars from './RatingStars';
 import './ArtworkDetail.css';
 
 class ArtworkDetail extends Component {
@@ -52,6 +55,10 @@ class ArtworkDetail extends Component {
         throw new Error('Artwork ID not found');
       }
 
+      // Check if this artwork has been viewed in this session
+      var viewedArtworks = JSON.parse(sessionStorage.getItem('arthive_viewed_artworks') || '[]');
+      var shouldCountView = !viewedArtworks.includes(artworkId);
+
       var token = localStorage.getItem('arthive_token');
       var headers = {
         'Content-Type': 'application/json'
@@ -61,7 +68,16 @@ class ArtworkDetail extends Component {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      var response = await fetch(`http://localhost:3000/api/v1/artworks/${artworkId}`, {
+      // Add count_view parameter only if this is first time viewing in session
+      var url = `http://localhost:3000/api/v1/artworks/${artworkId}`;
+      if (shouldCountView) {
+        url += '?count_view=true';
+        // Mark this artwork as viewed in session
+        viewedArtworks.push(artworkId);
+        sessionStorage.setItem('arthive_viewed_artworks', JSON.stringify(viewedArtworks));
+      }
+
+      var response = await fetch(url, {
         headers: headers
       });
 
@@ -392,7 +408,28 @@ class ArtworkDetail extends Component {
                   <h3 className="artist-name">{artist?.name || artwork.artistName}</h3>
                   {artist?.bio && <p className="artist-bio">{artist.bio}</p>}
                 </div>
+                {artist?._id && (
+                  <FollowButton 
+                    artistId={artist._id} 
+                    initialIsFollowing={false}
+                  />
+                )}
               </div>
+
+              {/* Rating Display */}
+              {artwork.averageRating > 0 && (
+                <div className="artwork-rating">
+                  <RatingStars 
+                    value={artwork.averageRating} 
+                    readonly 
+                    size="medium"
+                    showValue
+                  />
+                  <span className="rating-text">
+                    ({artwork.totalReviews} {artwork.totalReviews === 1 ? 'review' : 'reviews'})
+                  </span>
+                </div>
+              )}
 
               {/* Price */}
               <div className="price-section">
@@ -459,6 +496,15 @@ class ArtworkDetail extends Component {
                   <span className="info-label">Uploaded:</span>
                   <span className="info-value">{new Date(artwork.createdAt).toLocaleDateString()}</span>
                 </div>
+              </div>
+
+              {/* Reviews Section */}
+              <div className="reviews-section">
+                <h2 className="section-title">Customer Reviews</h2>
+                <ReviewList 
+                  artworkId={artwork._id} 
+                  currentUserId={this.context?.user?._id}
+                />
               </div>
             </div>
           </div>

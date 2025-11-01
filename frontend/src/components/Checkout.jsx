@@ -32,12 +32,29 @@ class Checkout extends Component {
   }
 
   componentDidMount() {
+    // Wait for auth to load before checking
+    if (this.context.loading) {
+      // Wait a moment for auth to initialize
+      setTimeout(() => {
+        if (!this.context.isAuthenticated) {
+          window.location.href = '/login?redirect=/checkout';
+        } else {
+          this.initializeCheckout();
+        }
+      }, 100);
+      return;
+    }
+
     // Redirect if not authenticated
     if (!this.context.isAuthenticated) {
       window.location.href = '/login?redirect=/checkout';
       return;
     }
 
+    this.initializeCheckout();
+  }
+
+  initializeCheckout = () => {
     // Pre-fill name from user profile
     var user = this.context.user;
     if (user) {
@@ -159,10 +176,7 @@ class Checkout extends Component {
 
     // Prepare order data
     var orderData = {
-      artworks: cartContext.cart.map(item => ({
-        artwork: item._id,
-        quantity: 1
-      })),
+      cart: cartContext.cart, // Send full cart items
       billingAddress: {
         fullName,
         address,
@@ -172,11 +186,12 @@ class Checkout extends Component {
         country
       },
       cardDetails: {
-        cardNumber: cardNumber.slice(-4), // Only last 4 digits
-        cardType: this.getCardType(cardNumber),
+        cardNumber: cardNumber, // Send full card number for backend validation
         cardholderName,
         expiryMonth,
-        expiryYear
+        expiryYear,
+        cvv,
+        expiryDate: `${expiryMonth}/${expiryYear}` // Backend expects expiryDate
       },
       paymentMethod: 'mock'
     };
@@ -200,9 +215,10 @@ class Checkout extends Component {
         // Redirect to success page
         window.location.href = `/payment-success?transactionId=${data.transaction.transactionId}`;
       } else {
+        console.error('Order creation failed:', data);
         this.setState({
           isProcessing: false,
-          errors: { submit: data.error || 'Payment failed. Please try again.' }
+          errors: { submit: data.message || data.error || 'Payment failed. Please try again.' }
         });
       }
     } catch (error) {

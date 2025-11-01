@@ -15,12 +15,28 @@ class PaymentSuccess extends Component {
   }
 
   componentDidMount() {
+    // Wait for auth to load before checking
+    if (this.context.loading) {
+      setTimeout(() => {
+        if (!this.context.isAuthenticated) {
+          window.location.href = '/login';
+        } else {
+          this.loadTransaction();
+        }
+      }, 100);
+      return;
+    }
+
     // Redirect if not authenticated
     if (!this.context.isAuthenticated) {
       window.location.href = '/login';
       return;
     }
 
+    this.loadTransaction();
+  }
+
+  loadTransaction = () => {
     // Get transaction ID from URL
     var urlParams = new URLSearchParams(window.location.search);
     var transactionId = urlParams.get('transactionId');

@@ -4,6 +4,7 @@ var { authenticateToken, authorizeRole } = require('../middleware/auth');
 var Artwork = require('../models/Artwork');
 var User = require('../models/User');
 var Transaction = require('../models/Transaction');
+var Notification = require('../models/Notification');
 
 // Middleware to ensure only admin can access these routes
 router.use(authenticateToken);
@@ -116,6 +117,15 @@ router.put('/artworks/:id/approve', async (req, res) => {
     // Populate artist info for response
     await artwork.populate('artist', 'name email username');
 
+    // Create notification for the artist
+    await Notification.createNotification({
+      recipient: artwork.artist._id,
+      type: 'artwork_approved',
+      title: 'Artwork Approved',
+      message: `Your artwork "${artwork.title}" has been approved and is now live!`,
+      relatedArtwork: artwork._id
+    });
+
     res.json({
       success: true,
       message: 'Artwork approved successfully',
@@ -159,6 +169,15 @@ router.put('/artworks/:id/reject', async (req, res) => {
 
     // Populate artist info for response
     await artwork.populate('artist', 'name email username');
+
+    // Create notification for the artist
+    await Notification.createNotification({
+      recipient: artwork.artist._id,
+      type: 'artwork_rejected',
+      title: 'Artwork Rejected',
+      message: `Your artwork "${artwork.title}" was rejected. Reason: ${reason}`,
+      relatedArtwork: artwork._id
+    });
 
     res.json({
       success: true,
@@ -328,6 +347,57 @@ router.get('/analytics', async (req, res) => {
       { $sort: { count: -1 } }
     ]);
 
+    // Revenue trends (last 7 days)
+    var sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    var revenueTrends = await Transaction.aggregate([
+      { 
+        $match: { 
+          paymentStatus: 'completed',
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { 
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          revenue: { $sum: '$totalAmount' },
+          orders: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // New users trend (last 7 days)
+    var userTrends = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Average order value
+    var avgOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+    // Most liked artworks
+    var mostLikedArtworks = await Artwork.find({ isActive: true })
+      .sort({ likesCount: -1 })
+      .limit(5)
+      .populate('artist', 'name username')
+      .select('title likesCount imageUrl');
+
     res.json({
       success: true,
       analytics: {
@@ -337,14 +407,20 @@ router.get('/analytics', async (req, res) => {
           totalArtworks,
           totalSales,
           totalRevenue,
+          avgOrderValue: Math.round(avgOrderValue * 100) / 100,
           pendingArtworks,
           approvedArtworks,
           rejectedArtworks
         },
         topArtworks,
         topArtists,
+        mostLikedArtworks,
         recentTransactions,
-        categoryDistribution
+        categoryDistribution,
+        trends: {
+          revenue: revenueTrends,
+          users: userTrends
+        }
       }
     });
   } catch (error) {

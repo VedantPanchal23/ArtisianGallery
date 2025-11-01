@@ -18,7 +18,7 @@ import Checkout from './components/Checkout';
 import PaymentSuccess from './components/PaymentSuccess';
 import MyUploads from './components/MyUploads';
 import AdminDashboard from './components/AdminDashboard';
-import AuthDebug from './components/AuthDebug';
+import Notifications from './components/Notifications';
 import './App.css';
 
 class App extends Component {
@@ -45,6 +45,7 @@ class App extends Component {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/contact" element={<ContactUs />} />
               <Route path="/about" element={<AboutUs />} />
+              <Route path="/notifications" element={<Notifications />} />
               {/* Add other routes here */}
               </Routes>
             </div>

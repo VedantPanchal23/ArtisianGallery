@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 import './Explore.css';
 
 class Explore extends Component {
@@ -19,88 +20,6 @@ class Explore extends Component {
       currentPage: 1,
       totalPages: 1,
       totalArtworks: 0
-      artworks: [
-        {
-          id: 1,
-          title: "Digital Sunset",
-          artist: "Sarah Chen",
-          price: 350,
-          category: "landscape",
-          image: "/api/placeholder/300/400",
-          tags: ["sunset", "digital", "landscape"],
-          createdAt: "2024-12-01"
-        },
-        {
-          id: 2,
-          title: "Neon Dreams",
-          artist: "Alex Rodriguez",
-          price: 650,
-          category: "abstract",
-          image: "/api/placeholder/300/400",
-          tags: ["neon", "cyberpunk", "abstract"],
-          createdAt: "2024-11-28"
-        },
-        {
-          id: 3,
-          title: "Portrait Study #3",
-          artist: "Maya Patel",
-          price: 280,
-          category: "portrait",
-          image: "/api/placeholder/300/400",
-          tags: ["portrait", "study", "realistic"],
-          createdAt: "2024-11-25"
-        },
-        {
-          id: 4,
-          title: "Cosmic Journey",
-          artist: "David Kim",
-          price: 750,
-          category: "space",
-          image: "/api/placeholder/300/400",
-          tags: ["space", "cosmic", "journey"],
-          createdAt: "2024-11-20"
-        },
-        {
-          id: 5,
-          title: "Urban Fragments",
-          artist: "Lisa Zhang",
-          price: 425,
-          category: "urban",
-          image: "/api/placeholder/300/400",
-          tags: ["urban", "city", "fragments"],
-          createdAt: "2024-11-15"
-        },
-        {
-          id: 6,
-          title: "Botanical Dreams",
-          artist: "Carlos Mendez",
-          price: 320,
-          category: "nature",
-          image: "/api/placeholder/300/400",
-          tags: ["botanical", "nature", "dreams"],
-          createdAt: "2024-11-10"
-        },
-        {
-          id: 7,
-          title: "Geometric Harmony",
-          artist: "Anna Kowalski",
-          price: 680,
-          category: "abstract",
-          image: "/api/placeholder/300/400",
-          tags: ["geometric", "harmony", "abstract"],
-          createdAt: "2024-11-05"
-        },
-        {
-          id: 8,
-          title: "Ocean Depths",
-          artist: "James Wilson",
-          price: 580,
-          category: "landscape",
-          image: "/api/placeholder/300/400",
-          tags: ["ocean", "depths", "underwater"],
-          createdAt: "2024-10-30"
-        }
-      ]
     };
   }
 
@@ -109,39 +28,6 @@ class Explore extends Component {
     document.addEventListener('click', this.handleClickOutside);
     // Load artworks from API
     this.loadArtworks();
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('click', this.handleClickOutside);
-  }
-
-  handleClickOutside = (event) => {
-    if (this.profileMenuRef && !this.profileMenuRef.contains(event.target)) {
-      this.setState({ showDropdown: false });
-    }
-  }
-
-  getInitials = (name) => {
-    if (!name) return 'U';
-    var names = name.split(' ');
-    var initials = names[0].charAt(0);
-    if (names.length > 1) {
-      initials += names[1].charAt(0);
-    }
-    return initials.toUpperCase();
-  }
-
-  toggleDropdown = () => {
-    this.setState({ showDropdown: !this.state.showDropdown });
-  }
-
-  handleLogout = () => {
-    this.setState({ showDropdown: false });
-    this.context.logout();
-  }
-
-  handleSearchChange = (e) => {
-    this.setState({ searchTerm: e.target.value });
   }
 
   loadArtworks = async () => {
@@ -314,10 +200,12 @@ class Explore extends Component {
                       Signup/Login
                     </button>
                   ) : (
-                    <div className="profile-menu" ref={(ref) => this.profileMenuRef = ref}>
-                      <div className="profile-circle" onClick={this.toggleDropdown}>
-                        {this.getInitials(this.context.user?.name)}
-                      </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <NotificationBell />
+                      <div className="profile-menu" ref={(ref) => this.profileMenuRef = ref}>
+                        <div className="profile-circle" onClick={this.toggleDropdown}>
+                          {this.getInitials(this.context.user?.name)}
+                        </div>
                       {this.state.showDropdown && (
                         <div className="dropdown-menu">
                           <div className="dropdown-header">
@@ -342,9 +230,6 @@ class Explore extends Component {
                               <a href="/upload-artwork" className="dropdown-item">Upload Artwork</a>
                               <a href="/my-uploads" className="dropdown-item">My Uploads</a>
                             </>
-                          {/* Show "My Uploads" only for artists */}
-                          {this.context.user?.role === 'artist' && (
-                            <a href="/my-uploads" className="dropdown-item">My Uploads</a>
                           )}
                           
                           <a href="/explore" className="dropdown-item">Explore</a>
@@ -356,6 +241,7 @@ class Explore extends Component {
                           </button>
                         </div>
                       )}
+                      </div>
                     </div>
                   )}
                 </li>

@@ -14,12 +14,23 @@ class Cart extends Component {
   }
 
   componentDidMount() {
+    document.addEventListener('click', this.handleClickOutside);
+    
+    // Wait for auth to load before checking
+    if (this.context.loading) {
+      setTimeout(() => {
+        if (!this.context.isAuthenticated) {
+          window.location.href = '/login?redirect=/cart';
+        }
+      }, 100);
+      return;
+    }
+
     // Redirect if not authenticated
     if (!this.context.isAuthenticated) {
       window.location.href = '/login?redirect=/cart';
       return;
     }
-    document.addEventListener('click', this.handleClickOutside);
   }
 
   componentWillUnmount() {

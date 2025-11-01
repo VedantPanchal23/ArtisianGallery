@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var Artwork = require('../models/Artwork');
 var User = require('../models/User');
+var Notification = require('../models/Notification');
 var { authenticateToken, optionalAuth } = require('../middleware/auth');
 var { uploadArtworkImage } = require('../utils/cloudinaryService');
 
@@ -58,6 +59,12 @@ router.post('/', auth, async function(req, res, next) {
 
     var { title, description, price, currency, category, tags, imageUrl, thumbnailUrl, dimensions, fileSize } = req.body;
 
+    // Determine initial status based on environment variable
+    // AUTO_APPROVE_ARTWORKS=true (default) - artworks are approved immediately
+    // AUTO_APPROVE_ARTWORKS=false - artworks require admin approval
+    var autoApprove = process.env.AUTO_APPROVE_ARTWORKS !== 'false';
+    var initialStatus = autoApprove ? 'approved' : 'pending';
+
     // Create artwork
     var artwork = new Artwork({
       title: title,
@@ -72,7 +79,7 @@ router.post('/', auth, async function(req, res, next) {
       tags: tags || [],
       dimensions: dimensions || {},
       fileSize: fileSize || 0,
-      status: 'pending'
+      status: initialStatus
     });
 
     await artwork.save();
@@ -82,9 +89,13 @@ router.post('/', auth, async function(req, res, next) {
       $push: { uploadedArtworks: artwork._id }
     });
 
+    var message = initialStatus === 'approved' 
+      ? 'Artwork uploaded and published successfully'
+      : 'Artwork uploaded successfully and pending admin approval';
+
     res.status(201).json({
       success: true,
-      message: 'Artwork uploaded successfully and pending approval',
+      message: message,
       artwork: artwork
     });
 
@@ -269,10 +280,15 @@ router.get('/:id', optionalAuth, async function(req, res, next) {
       }
     }
 
-    // Increment view count
-    await Artwork.findByIdAndUpdate(req.params.id, {
-      $inc: { viewsCount: 1 }
-    });
+    // Increment view count only if 'count_view' query param is present
+    // This allows fetching artwork data without incrementing views
+    if (req.query.count_view === 'true') {
+      await Artwork.findByIdAndUpdate(req.params.id, {
+        $inc: { viewsCount: 1 }
+      });
+      // Update the artwork object to reflect the new view count
+      artwork.viewsCount = (artwork.viewsCount || 0) + 1;
+    }
 
     // Check if user has liked or favorited
     if (req.user) {
@@ -431,6 +447,18 @@ router.post('/:id/like', auth, async function(req, res, next) {
       // Like
       artwork.likes.push(userId);
       artwork.likesCount += 1;
+
+      // Create notification for the artist (only on like, not unlike)
+      if (userId.toString() !== artwork.artist.toString()) {
+        await Notification.createNotification({
+          recipient: artwork.artist,
+          type: 'artwork_liked',
+          title: 'Artwork Liked',
+          message: `${req.user.name} liked your artwork "${artwork.title}"`,
+          relatedArtwork: artwork._id,
+          relatedUser: userId
+        });
+      }
     }
 
     await artwork.save();

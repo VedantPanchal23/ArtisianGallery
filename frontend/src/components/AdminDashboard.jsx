@@ -487,6 +487,10 @@ class AdminDashboard extends Component {
                     <div className="empty-icon">✓</div>
                     <h3>All caught up!</h3>
                     <p>No pending artworks to review.</p>
+                    <p style={{fontSize: '14px', color: '#666', marginTop: '10px'}}>
+                      Note: Artworks are currently set to auto-approve. 
+                      To require manual approval, change status to 'pending' in backend/routes/artworks.js line 77.
+                    </p>
                   </div>
                 )}
 

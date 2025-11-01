@@ -22,7 +22,9 @@ class UploadArtwork extends Component {
       errors: {},
       successMessage: '',
       showDropdown: false,
-      isCheckingAuth: true
+      isCheckingAuth: true,
+      isEditMode: false,
+      editArtworkId: null
     };
     this.fileInputRef = React.createRef();
   }
@@ -30,10 +32,55 @@ class UploadArtwork extends Component {
   componentDidMount() {
     document.addEventListener('click', this.handleClickOutside);
     
+    // Check if editing existing artwork
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    
+    if (editId) {
+      this.setState({ isEditMode: true, editArtworkId: editId });
+    }
+    
     // Give AuthContext time to load from localStorage
     setTimeout(() => {
       this.checkAuthentication();
+      
+      // Load artwork data if editing
+      if (editId) {
+        this.loadArtworkForEdit(editId);
+      }
     }, 100);
+  }
+
+  loadArtworkForEdit = async (artworkId) => {
+    try {
+      const token = localStorage.getItem('arthive_token');
+      const response = await fetch(`http://localhost:3000/api/v1/artworks/${artworkId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const artwork = data.artwork;
+        
+        this.setState({
+          title: artwork.title,
+          description: artwork.description,
+          price: artwork.price,
+          currency: artwork.currency || 'INR',
+          category: artwork.category,
+          tags: artwork.tags ? artwork.tags.join(', ') : '',
+          imagePreview: artwork.imageUrl
+        });
+      } else {
+        alert('Failed to load artwork for editing');
+        window.location.href = '/my-uploads';
+      }
+    } catch (error) {
+      console.error('Error loading artwork:', error);
+      alert('Error loading artwork');
+    }
   }
 
   checkAuthentication = () => {
@@ -214,27 +261,39 @@ class UploadArtwork extends Component {
         throw new Error('Please login to upload artwork');
       }
 
-      // Step 1: Upload image
-      var formData = new FormData();
-      formData.append('artwork', this.state.imageFile);
+      var imageUrl = this.state.imagePreview;
+      var thumbnailUrl = this.state.imagePreview;
 
-      var uploadResponse = await fetch('http://localhost:3000/api/v1/artworks/upload-image', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      // Step 1: Upload image (only if new file selected)
+      if (this.state.imageFile) {
+        var formData = new FormData();
+        formData.append('artwork', this.state.imageFile);
 
-      if (!uploadResponse.ok) {
-        var uploadError = await uploadResponse.json();
-        throw new Error(uploadError.message || 'Failed to upload image');
+        var uploadResponse = await fetch('http://localhost:3000/api/v1/artworks/upload-image', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          var uploadError = await uploadResponse.json();
+          throw new Error(uploadError.message || 'Failed to upload image');
+        }
+
+        var uploadData = await uploadResponse.json();
+        imageUrl = uploadData.imageUrl;
+        thumbnailUrl = uploadData.thumbnailUrl || uploadData.imageUrl;
+        this.setState({ uploadProgress: 50 });
+      } else if (this.state.isEditMode) {
+        // For edit mode, keep existing image
+        this.setState({ uploadProgress: 50 });
+      } else {
+        throw new Error('Please select an image');
       }
 
-      var uploadData = await uploadResponse.json();
-      this.setState({ uploadProgress: 50 });
-
-      // Step 2: Create artwork
+      // Step 2: Create or Update artwork
       var tagsArray = this.state.tags
         ? this.state.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
         : [];
@@ -246,13 +305,18 @@ class UploadArtwork extends Component {
         currency: this.state.currency,
         category: this.state.category,
         tags: tagsArray,
-        imageUrl: uploadData.imageUrl,
-        thumbnailUrl: uploadData.thumbnailUrl || uploadData.imageUrl,
-        fileSize: uploadData.file?.size || 0
+        imageUrl: imageUrl,
+        thumbnailUrl: thumbnailUrl
       };
 
-      var createResponse = await fetch('http://localhost:3000/api/v1/artworks', {
-        method: 'POST',
+      var url = this.state.isEditMode 
+        ? `http://localhost:3000/api/v1/artworks/${this.state.editArtworkId}`
+        : 'http://localhost:3000/api/v1/artworks';
+      
+      var method = this.state.isEditMode ? 'PUT' : 'POST';
+
+      var saveResponse = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -260,17 +324,21 @@ class UploadArtwork extends Component {
         body: JSON.stringify(artworkData)
       });
 
-      if (!createResponse.ok) {
-        var createError = await createResponse.json();
-        throw new Error(createError.message || 'Failed to create artwork');
+      if (!saveResponse.ok) {
+        var saveError = await saveResponse.json();
+        throw new Error(saveError.message || `Failed to ${this.state.isEditMode ? 'update' : 'create'} artwork`);
       }
 
-      var createData = await createResponse.json();
+      var saveData = await saveResponse.json();
       this.setState({ uploadProgress: 100 });
 
       // Success
+      var successMsg = this.state.isEditMode 
+        ? 'Artwork updated successfully!'
+        : 'Artwork uploaded successfully!';
+      
       this.setState({
-        successMessage: 'Artwork uploaded successfully! Pending admin approval.',
+        successMessage: successMsg,
         title: '',
         description: '',
         price: '',
@@ -373,8 +441,8 @@ class UploadArtwork extends Component {
         {/* Main Content */}
         <div className="upload-container">
           <div className="upload-header">
-            <h1>Upload New Artwork</h1>
-            <p>Share your creative work with the ArtHive community</p>
+            <h1>{this.state.isEditMode ? 'Edit Artwork' : 'Upload New Artwork'}</h1>
+            <p>{this.state.isEditMode ? 'Update your artwork details' : 'Share your creative work with the ArtHive community'}</p>
           </div>
 
           {successMessage && (
@@ -541,7 +609,9 @@ class UploadArtwork extends Component {
                 className="btn-primary"
                 disabled={isUploading}
               >
-                {isUploading ? `Uploading... ${uploadProgress}%` : 'Upload Artwork'}
+                {isUploading 
+                  ? `${this.state.isEditMode ? 'Updating' : 'Uploading'}... ${uploadProgress}%` 
+                  : this.state.isEditMode ? 'Update Artwork' : 'Upload Artwork'}
               </button>
             </div>
 

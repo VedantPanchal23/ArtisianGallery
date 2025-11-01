@@ -58,7 +58,7 @@ const validateLoginData = (data) => {
 const generateToken = (userId) => {
   return jwt.sign(
     { userId: userId },
-    'arthive_secret_key',
+    process.env.JWT_SECRET || 'arthive_secret_key',
     { expiresIn: '7d' }
   );
 };
@@ -133,10 +133,10 @@ router.post('/login', async function(req, res, next) {
 
     const { username, password } = req.body;
 
-    // Find user by username or email
+    // Find user by username or email (include password field)
     const user = await User.findOne({
       $or: [{ username: username }, { email: username }]
-    });
+    }).select('+password');
 
     if (!user) {
       return res.status(401).json({

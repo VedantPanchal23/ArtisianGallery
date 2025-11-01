@@ -11,14 +11,12 @@ class UserProfile extends Component {
       showDropdown: false,
       activeTab: 'purchased',
       isCheckingAuth: true,
-      purchasedArt: [
-        // Mock data - will be replaced with real API data
-        { id: 1, title: 'Artwork 1', image: '', artist: 'Artist Name', price: '$100' },
-        { id: 2, title: 'Artwork 2', image: '', artist: 'Artist Name', price: '$150' },
-        { id: 3, title: 'Artwork 3', image: '', artist: 'Artist Name', price: '$200' },
-        { id: 4, title: 'Artwork 4', image: '', artist: 'Artist Name', price: '$120' }
-      ],
+      purchasedArt: [],
       favourites: [],
+      isLoadingPurchases: false,
+      purchaseError: null,
+      isLoadingFavorites: false,
+      favoritesError: null,
       userSettings: {
         name: '',
         email: '',
@@ -103,8 +101,118 @@ class UserProfile extends Component {
           bio: currentUser.bio || ''
         }
       });
+      // Load purchase history and favorites
+      this.loadPurchaseHistory();
+      this.loadFavorites();
     } else {
       this.setState({ isCheckingAuth: false });
+    }
+  }
+
+  loadPurchaseHistory = async () => {
+    var token = localStorage.getItem('arthive_token');
+    
+    try {
+      this.setState({ isLoadingPurchases: true, purchaseError: null });
+
+      var response = await fetch('http://localhost:3000/api/v1/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        var data = await response.json();
+        
+        // Transform transactions to purchased art format
+        var purchasedArt = [];
+        data.transactions.forEach(function(transaction) {
+          transaction.artworks.forEach(function(artwork) {
+            purchasedArt.push({
+              id: artwork.artwork,
+              title: artwork.title,
+              image: artwork.imageUrl,
+              artist: artwork.artistName,
+              price: artwork.price,
+              currency: artwork.currency,
+              transactionId: transaction.transactionId,
+              purchaseDate: transaction.createdAt,
+              transactionDate: new Date(transaction.createdAt).toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })
+            });
+          });
+        });
+
+        this.setState({
+          purchasedArt,
+          isLoadingPurchases: false
+        });
+      } else {
+        var errorData = await response.json();
+        this.setState({
+          purchaseError: errorData.error || 'Failed to load purchase history',
+          isLoadingPurchases: false
+        });
+      }
+    } catch (error) {
+      console.error('Error loading purchases:', error);
+      this.setState({
+        purchaseError: 'Network error. Please try again later.',
+        isLoadingPurchases: false
+      });
+    }
+  }
+
+  loadFavorites = async () => {
+    var token = localStorage.getItem('arthive_token');
+    var user = this.context.user;
+
+    if (!token || !user) {
+      return;
+    }
+
+    try {
+      this.setState({ isLoadingFavorites: true, favoritesError: null });
+
+      var response = await fetch(`http://localhost:3000/api/v1/artworks?favorites=${user._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        var data = await response.json();
+        
+        // Transform artworks data to match the favorites display format
+        var favorites = data.artworks.map(artwork => ({
+          id: artwork._id,
+          title: artwork.title,
+          artist: artwork.artist.name,
+          image: artwork.thumbnailUrl || artwork.imageUrl,
+          price: artwork.price,
+          currency: artwork.currency
+        }));
+
+        this.setState({
+          favourites: favorites,
+          isLoadingFavorites: false
+        });
+      } else {
+        var errorData = await response.json();
+        this.setState({
+          favoritesError: errorData.error || 'Failed to load favorites',
+          isLoadingFavorites: false
+        });
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      this.setState({
+        favoritesError: 'Network error. Please try again later.',
+        isLoadingFavorites: false
+      });
     }
   }
 
@@ -177,8 +285,42 @@ class UserProfile extends Component {
     }
   }
 
+  formatPrice = (price, currency) => {
+    var symbols = {
+      'INR': '₹',
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£'
+    };
+    return `${symbols[currency] || '₹'}${parseFloat(price).toFixed(2)}`;
+  }
+
   renderPurchasedTab() {
-    var purchasedArt = this.state.purchasedArt;
+    var { purchasedArt, isLoadingPurchases, purchaseError } = this.state;
+    
+    if (isLoadingPurchases) {
+      return (
+        <div className="tab-content">
+          <h2 className="section-title">My Purchased Art</h2>
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading your purchases...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (purchaseError) {
+      return (
+        <div className="tab-content">
+          <h2 className="section-title">My Purchased Art</h2>
+          <div className="error-container">
+            <p>{purchaseError}</p>
+            <button className="btn-retry" onClick={this.loadPurchaseHistory}>Retry</button>
+          </div>
+        </div>
+      );
+    }
     
     return (
       <div className="tab-content">
@@ -198,14 +340,26 @@ class UserProfile extends Component {
                 </div>
                 <div className="artwork-details">
                   <h3>{art.title}</h3>
-                  <p className="artist-name">{art.artist}</p>
-                  <p className="price">{art.price}</p>
+                  <p className="artist-name">by {art.artist}</p>
+                  <p className="price">{this.formatPrice(art.price, art.currency)}</p>
+                  <p className="purchase-date">Purchased: {art.transactionDate}</p>
+                  <button 
+                    className="btn-view-artwork"
+                    onClick={() => window.location.href = `/artwork/${art.id}`}
+                  >
+                    View Artwork
+                  </button>
                 </div>
               </div>
             ))
           ) : (
             <div className="empty-state">
-              <p>No purchased artworks yet</p>
+              <div className="empty-icon">🛒</div>
+              <h3>No purchases yet</h3>
+              <p>Start exploring our marketplace and buy your first artwork!</p>
+              <button className="btn-explore" onClick={() => window.location.href = '/explore'}>
+                Browse Artworks
+              </button>
             </div>
           )}
         </div>
@@ -214,36 +368,58 @@ class UserProfile extends Component {
   }
 
   renderFavouritesTab() {
-    var favourites = this.state.favourites;
+    var { favourites, isLoadingFavorites, favoritesError } = this.state;
     
     return (
       <div className="tab-content">
         <h2 className="section-title">My Favourite Art</h2>
-        <div className="artwork-grid">
-          {favourites.length > 0 ? (
-            favourites.map((art) => (
-              <div key={art.id} className="artwork-card">
-                <div className="artwork-image-placeholder">
-                  {art.image ? (
-                    <img src={art.image} alt={art.title} />
-                  ) : (
-                    <div className="placeholder-content">
-                      <span>🎨</span>
-                    </div>
-                  )}
+        
+        {isLoadingFavorites && (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading your favorites...</p>
+          </div>
+        )}
+
+        {favoritesError && (
+          <div className="error-container">
+            <p>{favoritesError}</p>
+            <button className="btn-retry" onClick={this.loadFavorites}>Retry</button>
+          </div>
+        )}
+
+        {!isLoadingFavorites && !favoritesError && (
+          <div className="artwork-grid">
+            {favourites.length > 0 ? (
+              favourites.map((art) => (
+                <div key={art.id} className="artwork-card">
+                  <div className="artwork-image-placeholder">
+                    {art.image ? (
+                      <img src={art.image} alt={art.title} />
+                    ) : (
+                      <div className="placeholder-content">
+                        <span>🎨</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="artwork-details">
+                    <h3>{art.title}</h3>
+                    <p className="artist-name">by {art.artist}</p>
+                    <p className="artwork-price">{this.formatPrice(art.price, art.currency)}</p>
+                    <a href={`/artwork/${art.id}`} className="btn-view-artwork">View Artwork</a>
+                  </div>
                 </div>
-                <div className="artwork-details">
-                  <h3>{art.title}</h3>
-                  <p className="artist-name">{art.artist}</p>
-                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">💙</div>
+                <h3>No favorites yet</h3>
+                <p>Start exploring and add artworks to your favorites!</p>
+                <a href="/explore" className="btn-explore">Explore Artworks</a>
               </div>
-            ))
-          ) : (
-            <div className="empty-state">
-              <p>No favourite artworks yet</p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }

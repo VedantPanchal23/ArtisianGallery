@@ -27,7 +27,7 @@ class Login extends Component {
     this.setState({ loading: true, error: '' });
 
     try {
-      const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+      var response = await fetch('http://localhost:3000/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ class Login extends Component {
         })
       });
 
-      const data = await response.json();
+      var data = await response.json();
 
       if (data.success) {
         // Use auth context to update state

@@ -9,7 +9,9 @@ class LandingPage extends Component {
     super(props);
     this.state = {
       notification: '',
-      showDropdown: false
+      showDropdown: false,
+      trendingArtworks: [],
+      isLoadingArtworks: true
     };
   }
 
@@ -35,6 +37,30 @@ class LandingPage extends Component {
 
     // Add click outside listener for dropdown
     document.addEventListener('click', this.handleClickOutside);
+
+    // Load trending artworks from API
+    this.loadTrendingArtworks();
+  }
+
+  loadTrendingArtworks = async () => {
+    try {
+      var response = await fetch('http://localhost:3000/api/v1/artworks?limit=6&sort=newest&status=approved');
+      
+      if (!response.ok) {
+        throw new Error('Failed to load artworks');
+      }
+
+      var data = await response.json();
+      
+      this.setState({
+        trendingArtworks: data.artworks || [],
+        isLoadingArtworks: false
+      });
+
+    } catch (error) {
+      console.error('Error loading trending artworks:', error);
+      this.setState({ isLoadingArtworks: false });
+    }
   }
 
   componentWillUnmount() {
@@ -66,11 +92,26 @@ class LandingPage extends Component {
     this.context.logout();
   }
 
+  formatPrice = (price, currency) => {
+    var symbols = {
+      'INR': '₹',
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£'
+    };
+    return `${symbols[currency] || '₹'}${parseFloat(price).toFixed(2)}`;
+  }
+
+  handleArtworkClick = (artworkId) => {
+    window.location.href = `/artwork/${artworkId}`;
+  }
+
   render() {
     var isAuthenticated = this.context.isAuthenticated;
     var user = this.context.user;
     var logout = this.context.logout;
     var notification = this.state.notification;
+    var { trendingArtworks, isLoadingArtworks } = this.state;
 
     return (
       <div className="landing-page">
@@ -117,9 +158,12 @@ class LandingPage extends Component {
                             <a href="/profile" className="dropdown-item">My Profile</a>
                           )}
                           
-                          {/* Show "My Uploads" only for artists */}
+                          {/* Show "My Uploads" and "Upload Artwork" for artists */}
                           {user?.role === 'artist' && (
-                            <a href="/my-uploads" className="dropdown-item">My Uploads</a>
+                            <>
+                              <a href="/upload-artwork" className="dropdown-item">Upload Artwork</a>
+                              <a href="/my-uploads" className="dropdown-item">My Uploads</a>
+                            </>
                           )}
                           
                           <a href="/explore" className="dropdown-item">Explore</a>
@@ -155,57 +199,29 @@ class LandingPage extends Component {
         <section className="showcase">
           <div className="section-container">
             <h2>Trending Artworks</h2>
-            <div className="artwork-grid">
-              <div className="artwork-card">
-                <img src="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=300&h=200&fit=crop" alt="Urban Horizon" />
-                <div className="artwork-info">
-                  <h3>Urban Horizon</h3>
-                  <p>Abstract</p>
-                  <p className="price">₹250.00</p>
-                </div>
+            {isLoadingArtworks ? (
+              <div className="artwork-grid">
+                <p style={{textAlign: 'center', padding: '40px', width: '100%'}}>Loading artworks...</p>
               </div>
-              <div className="artwork-card">
-                <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop" alt="Forest Whispers" />
-                <div className="artwork-info">
-                  <h3>Forest Whispers</h3>
-                  <p>Landscape</p>
-                  <p className="price">₹180.50</p>
-                </div>
+            ) : trendingArtworks.length > 0 ? (
+              <div className="artwork-grid">
+                {trendingArtworks.map(artwork => (
+                  <div key={artwork._id} className="artwork-card" onClick={() => this.handleArtworkClick(artwork._id)} style={{cursor: 'pointer'}}>
+                    <img src={artwork.thumbnailUrl || artwork.imageUrl} alt={artwork.title} />
+                    <div className="artwork-info">
+                      <h3>{artwork.title}</h3>
+                      <p>{artwork.category}</p>
+                      <p className="price">{this.formatPrice(artwork.price, artwork.currency)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="artwork-card">
-                <img src="https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=300&h=200&fit=crop" alt="Galactic Outpost" />
-                <div className="artwork-info">
-                  <h3>Galactic Outpost</h3>
-                  <p>Illustrative</p>
-                  <p className="price">₹320.75</p>
-                </div>
+            ) : (
+              <div className="artwork-grid">
+                <p style={{textAlign: 'center', padding: '40px', width: '100%'}}>No artworks available at the moment.</p>
               </div>
-              <div className="artwork-card">
-                <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300&h=200&fit=crop" alt="Crystal Cave" />
-                <div className="artwork-info">
-                  <h3>Crystal Cave</h3>
-                  <p>3D Render</p>
-                  <p className="price">₹195.00</p>
-                </div>
-              </div>
-              <div className="artwork-card">
-                <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=200&fit=crop" alt="Cosmic Dance" />
-                <div className="artwork-info">
-                  <h3>Cosmic Dance</h3>
-                  <p>Abstract</p>
-                  <p className="price">₹280.00</p>
-                </div>
-              </div>
-              <div className="artwork-card">
-                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop" alt="Neon Dreams" />
-                <div className="artwork-info">
-                  <h3>Neon Dreams</h3>
-                  <p>Digital Art</p>
-                  <p className="price">₹240.00</p>
-                </div>
-              </div>
-            </div>
-            <button className="btn-primary">See All</button>
+            )}
+            <button className="btn-primary" onClick={() => window.location.href = '/explore'}>See All</button>
           </div>
         </section>
 

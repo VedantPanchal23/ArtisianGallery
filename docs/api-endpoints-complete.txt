@@ -1,0 +1,683 @@
+# ArtHive API Endpoints Documentation
+
+## Base URL
+```
+http://localhost:3000/api/v1
+```
+
+---
+
+## Authentication Endpoints
+
+### 1. Register User
+**POST** `/auth/register`
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123",
+  "confirmPassword": "password123",
+  "role": "user"  // "user" | "artist"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "_id": "...",
+    "name": "John Doe",
+    "username": "johndoe",
+    "email": "john@example.com",
+    "role": "user"
+  }
+}
+```
+
+---
+
+### 2. Login
+**POST** `/auth/login`
+
+**Request Body:**
+```json
+{
+  "username": "johndoe",  // username or email
+  "password": "password123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Login successful",
+  "token": "jwt_token_here",
+  "user": {
+    "_id": "...",
+    "name": "John Doe",
+    "username": "johndoe",
+    "email": "john@example.com",
+    "role": "user"
+  }
+}
+```
+
+---
+
+### 3. Forgot Password (Send OTP)
+**POST** `/auth/forgot-password`
+
+**Request Body:**
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "OTP sent to your email",
+  "email": "john@example.com"
+}
+```
+
+---
+
+### 4. Verify OTP
+**POST** `/auth/verify-otp`
+
+**Request Body:**
+```json
+{
+  "email": "john@example.com",
+  "otp": "123456"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "OTP verified successfully",
+  "resetToken": "reset_token_here"
+}
+```
+
+---
+
+### 5. Reset Password
+**POST** `/auth/reset-password`
+
+**Request Body:**
+```json
+{
+  "resetToken": "reset_token_here",
+  "newPassword": "newpassword123",
+  "confirmPassword": "newpassword123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Password reset successfully"
+}
+```
+
+---
+
+## Artwork Endpoints
+
+### 1. Create Artwork
+**POST** `/artworks/`
+
+**Headers:** `Authorization: Bearer <token>` (Artist/Admin only)
+
+**Request Body:**
+```json
+{
+  "title": "Mumbai Sunset",
+  "description": "Beautiful sunset over Mumbai skyline...",
+  "price": 899,
+  "currency": "INR",  // INR | USD | EUR | GBP
+  "category": "landscape",  // abstract | landscape | portrait | digital | photography | illustration | 3d | painting | nature | urban | space | other
+  "tags": ["mumbai", "sunset", "cityscape"],
+  "imageUrl": "https://...",
+  "thumbnailUrl": "https://...",
+  "dimensions": "3000x2000",
+  "fileSize": "2.5 MB"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Artwork created successfully. Pending admin approval.",
+  "artwork": { /* artwork object */ }
+}
+```
+
+---
+
+### 2. Upload Artwork Image
+**POST** `/artworks/upload-image`
+
+**Headers:** `Authorization: Bearer <token>` (Artist/Admin only)
+
+**Content-Type:** `multipart/form-data`
+
+**Form Data:**
+- `image`: File (max 10MB, image/* only)
+
+**Response (200):**
+```json
+{
+  "message": "Image uploaded successfully",
+  "imageUrl": "http://localhost:3000/uploads/artworks/filename.jpg",
+  "thumbnailUrl": "http://localhost:3000/uploads/artworks/filename.jpg"
+}
+```
+
+---
+
+### 3. Get All Artworks (with filters)
+**GET** `/artworks/`
+
+**Headers:** `Authorization: Bearer <token>` (Optional - for browsing)
+
+**Query Parameters:**
+- `search` - Text search in title/description/tags
+- `category` - Filter by category
+- `minPrice` - Minimum price filter
+- `maxPrice` - Maximum price filter
+- `sort` - Sort by: `createdAt` | `-createdAt` | `price` | `-price` | `title` | `likesCount` | `salesCount`
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 12)
+- `status` - Filter by status: `pending` | `approved` | `rejected` (default: `approved`)
+- `artist` - Filter by artist ID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "artworks": [ /* array of artwork objects */ ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 5,
+    "totalArtworks": 48,
+    "limit": 12
+  }
+}
+```
+
+---
+
+### 4. Get Artwork by ID
+**GET** `/artworks/:id`
+
+**Headers:** `Authorization: Bearer <token>` (Optional - for browsing)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "artwork": {
+    "_id": "...",
+    "title": "Mumbai Sunset",
+    "description": "...",
+    "price": 899,
+    "currency": "INR",
+    "imageUrl": "...",
+    "artist": {
+      "_id": "...",
+      "name": "Priya Sharma",
+      "username": "priyasharma"
+    },
+    "likesCount": 45,
+    "favoritesCount": 23,
+    "salesCount": 5,
+    "viewsCount": 234,
+    "isLiked": false,
+    "isFavorited": false
+  }
+}
+```
+
+---
+
+### 5. Update Artwork
+**PUT** `/artworks/:id`
+
+**Headers:** `Authorization: Bearer <token>` (Owner/Admin only)
+
+**Request Body:** (Same as Create Artwork)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Artwork updated successfully",
+  "artwork": { /* updated artwork object */ }
+}
+```
+
+---
+
+### 6. Delete Artwork (Soft Delete)
+**DELETE** `/artworks/:id`
+
+**Headers:** `Authorization: Bearer <token>` (Owner/Admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Artwork deleted successfully"
+}
+```
+
+---
+
+### 7. Like/Unlike Artwork
+**POST** `/artworks/:id/like`
+
+**Headers:** `Authorization: Bearer <token>` (Required)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Artwork liked",  // or "Artwork unliked"
+  "liked": true,
+  "likesCount": 46
+}
+```
+
+---
+
+### 8. Favorite/Unfavorite Artwork
+**POST** `/artworks/:id/favorite`
+
+**Headers:** `Authorization: Bearer <token>` (Required)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Artwork added to favorites",  // or "Artwork removed from favorites"
+  "favorited": true,
+  "favoritesCount": 24
+}
+```
+
+---
+
+## Order Endpoints
+
+### 1. Create Order (Checkout)
+**POST** `/orders/`
+
+**Headers:** `Authorization: Bearer <token>` (Required)
+
+**Request Body:**
+```json
+{
+  "artworks": [
+    {
+      "artwork": "artwork_id_1",
+      "quantity": 1
+    },
+    {
+      "artwork": "artwork_id_2",
+      "quantity": 1
+    }
+  ],
+  "billingAddress": {
+    "fullName": "John Doe",
+    "address": "123 Main Street, Apt 4B",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "pincode": "400001",
+    "country": "India"
+  },
+  "cardDetails": {
+    "cardNumber": "1234",  // Last 4 digits only
+    "cardType": "Visa",
+    "cardholderName": "JOHN DOE",
+    "expiryMonth": "12",
+    "expiryYear": "2025"
+  },
+  "paymentMethod": "mock"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Order placed successfully",
+  "transaction": {
+    "_id": "...",
+    "transactionId": "TXN-...",
+    "buyer": "...",
+    "buyerName": "John Doe",
+    "buyerEmail": "john@example.com",
+    "artworks": [ /* array of purchased artworks */ ],
+    "totalAmount": 1798,
+    "currency": "INR",
+    "paymentStatus": "completed",
+    "billingAddress": { /* address object */ },
+    "cardDetails": { /* card details object */ },
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+---
+
+### 2. Get Order History
+**GET** `/orders/`
+
+**Headers:** `Authorization: Bearer <token>` (Required)
+
+**Query Parameters:**
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 10)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "transactions": [ /* array of transaction objects */ ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 2,
+    "totalTransactions": 15,
+    "limit": 10
+  }
+}
+```
+
+---
+
+### 3. Get Order Details
+**GET** `/orders/:id`
+
+**Headers:** `Authorization: Bearer <token>` (Owner/Admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "transaction": { /* full transaction object */ }
+}
+```
+
+---
+
+### 4. Check Purchase Status
+**GET** `/orders/check/:artworkId`
+
+**Headers:** `Authorization: Bearer <token>` (Required)
+
+**Response (200):**
+```json
+{
+  "hasPurchased": true,
+  "transaction": { /* transaction object */ }
+}
+```
+
+---
+
+## Admin Endpoints
+
+### 1. Get Pending Artworks
+**GET** `/admin/artworks/pending`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Query Parameters:**
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 20)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "artworks": [ /* array of pending artworks with artist info */ ],
+  "pagination": { /* pagination object */ }
+}
+```
+
+---
+
+### 2. Get All Artworks (Admin View)
+**GET** `/admin/artworks/all`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Query Parameters:**
+- `status` - Filter by status: `pending` | `approved` | `rejected`
+- `search` - Text search
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 20)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "artworks": [ /* array of artworks */ ],
+  "pagination": { /* pagination object */ }
+}
+```
+
+---
+
+### 3. Approve Artwork
+**PUT** `/admin/artworks/:id/approve`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Artwork approved successfully",
+  "artwork": { /* approved artwork object */ }
+}
+```
+
+---
+
+### 4. Reject Artwork
+**PUT** `/admin/artworks/:id/reject`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Request Body:**
+```json
+{
+  "reason": "Image quality does not meet platform standards"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Artwork rejected successfully",
+  "artwork": { /* rejected artwork object */ }
+}
+```
+
+---
+
+### 5. Get All Users
+**GET** `/admin/users`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Query Parameters:**
+- `role` - Filter by role: `user` | `artist` | `admin`
+- `search` - Search by name/username/email
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 20)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "users": [ /* array of user objects (without passwords) */ ],
+  "pagination": { /* pagination object */ }
+}
+```
+
+---
+
+### 6. Block/Unblock User
+**PUT** `/admin/users/:id/block`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Request Body:**
+```json
+{
+  "block": true  // true to block, false to unblock
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "User blocked successfully",  // or "User unblocked successfully"
+  "user": { /* updated user object */ }
+}
+```
+
+---
+
+### 7. Get Platform Analytics
+**GET** `/admin/analytics`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "analytics": {
+    "overview": {
+      "totalUsers": 150,
+      "totalArtists": 45,
+      "totalArtworks": 320,
+      "totalSales": 89,
+      "totalRevenue": 125400,
+      "pendingArtworks": 12,
+      "approvedArtworks": 298,
+      "rejectedArtworks": 10
+    },
+    "topArtworks": [ /* top 5 selling artworks */ ],
+    "topArtists": [ /* top 5 artists by sales */ ],
+    "recentTransactions": [ /* last 10 transactions */ ],
+    "categoryDistribution": [ /* artwork count by category */ ]
+  }
+}
+```
+
+---
+
+### 8. Delete Artwork (Permanent)
+**DELETE** `/admin/artworks/:id`
+
+**Headers:** `Authorization: Bearer <token>` (Admin only)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Artwork deleted permanently"
+}
+```
+
+**Error (400):**
+```json
+{
+  "error": "Cannot delete artwork with sales. Consider rejecting instead."
+}
+```
+
+---
+
+## Error Responses
+
+### 400 Bad Request
+```json
+{
+  "error": "Validation error message"
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "error": "Authentication required" 
+}
+```
+
+### 403 Forbidden
+```json
+{
+  "error": "You do not have permission to perform this action"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "error": "Resource not found"
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "error": "Server error message"
+}
+```
+
+---
+
+## Authentication Notes
+
+- Include JWT token in Authorization header: `Authorization: Bearer <token>`
+- Token expires after 7 days
+- Optional authentication endpoints allow browsing without login (GET artworks, GET artwork by ID)
+- Mandatory authentication required for:
+  - Creating/updating/deleting artworks
+  - Like/favorite actions
+  - Cart/checkout operations
+  - Admin operations
+
+---
+
+## Rate Limiting
+
+Currently no rate limiting implemented. Consider adding in production.
+
+---
+
+## CORS Configuration
+
+- Allowed origin: `http://localhost:5173` (frontend)
+- Credentials: Enabled
+
+---
+
+**Last Updated:** January 2024
+**API Version:** v1

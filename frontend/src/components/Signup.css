@@ -149,24 +149,27 @@
 }
 
 .login-section {
-  border-top: 1px solid #262626;
+  border-top: 1px solid light-dark(#dee2e6, #333);
   padding-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .login-section p {
-  color: white;
+  color: light-dark(#6c757d, #8e8e8e);
   font-size: 0.875rem;
   margin: 0;
 }
 
-.login-section a {
+.login-link {
   color: #0095f6;
   text-decoration: none;
   font-weight: 600;
+  transition: all 0.3s ease;
 }
 
-.login-section a:hover {
+.login-link:hover {
   text-decoration: underline;
+  color: #1da1f2;
 }
 
 /* Responsive */

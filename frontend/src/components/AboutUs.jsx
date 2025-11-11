@@ -1,10 +1,42 @@
 import React, { Component } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import ProfileDropdown from './ProfileDropdown';
+import { Icon } from './icons';
 import './AboutUs.css';
 
 class AboutUs extends Component {
+  static contextType = AuthContext;
   render() {
+    const { isAuthenticated, user } = this.context;
+
     return (
       <div className="about-page">
+        <nav className="navbar">
+          <div className="nav-container">
+            <div className="logo">ArtHive</div>
+            <div className="nav-right">
+              <ul className="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/explore">Explore</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/contact">Contact Us</a></li>
+                <li>
+                  {!isAuthenticated ? (
+                    <button className="signup-btn" onClick={() => window.location.href = '/signup'}>
+                      Signup/Login
+                    </button>
+                  ) : (
+                    <ProfileDropdown
+                      user={user}
+                      onLogout={() => this.context.logout()}
+                    />
+                  )}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
         <div className="about-container">
           {/* Header Section */}
           <section className="about-header">
@@ -19,7 +51,7 @@ class AboutUs extends Component {
 
           {/* Team Section */}
           <section className="team-section">
-            <h2>👨‍💻 Meet the Team</h2>
+            <h2><Icon name="users" size={24} className="icon--heading" /> Meet the Team</h2>
             
             <div className="team-grid">
               {/* Team Member 1 */}
@@ -74,7 +106,7 @@ class AboutUs extends Component {
 
           {/* Vision Section */}
           <section className="vision-section">
-            <h2>🌟 Our Vision</h2>
+            <h2><Icon name="star" size={24} className="icon--heading" /> Our Vision</h2>
             <div className="vision-content">
               <p>
                 To bridge the gap between creativity and technology by offering a centralized digital art 

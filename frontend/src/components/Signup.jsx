@@ -38,7 +38,7 @@ class Signup extends Component {
     this.setState({ loading: true, error: '' });
 
     try {
-      const response = await fetch('http://localhost:3000/api/v1/auth/register', {
+      var response = await fetch('http://localhost:3000/api/v1/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ class Signup extends Component {
         })
       });
 
-      const data = await response.json();
+      var data = await response.json();
 
       if (data.success) {
         // Use auth context to update state
@@ -157,7 +157,7 @@ class Signup extends Component {
             </form>
             
             <div className="login-section">
-              <p>Have an account? <a href="/login">Log in</a></p>
+              <p>Already have an account? <a href="/login" className="login-link">Login</a></p>
             </div>
           </div>
         </div>

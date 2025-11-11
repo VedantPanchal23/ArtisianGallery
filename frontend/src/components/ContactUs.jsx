@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import ProfileDropdown from './ProfileDropdown';
 import './ContactUs.css';
 
 class ContactUs extends Component {
+  static contextType = AuthContext;
   constructor(props) {
     super(props);
     this.state = {
@@ -24,7 +27,9 @@ class ContactUs extends Component {
   handleSubmit = async (e) => {
     e.preventDefault();
     
-    const { name, email, body } = this.state;
+    var name = this.state.name;
+    var email = this.state.email;
+    var body = this.state.body;
     
     if (!name.trim() || !email.trim() || !body.trim()) {
       this.setState({ error: 'All fields are required.' });
@@ -32,7 +37,7 @@ class ContactUs extends Component {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       this.setState({ error: 'Please enter a valid email address.' });
       return;
@@ -59,11 +64,43 @@ class ContactUs extends Component {
   }
 
   render() {
-    const { name, email, body, loading, success, error } = this.state;
+    var name = this.state.name;
+    var email = this.state.email;
+    var body = this.state.body;
+    var loading = this.state.loading;
+    var success = this.state.success;
+    var error = this.state.error;
+    const { isAuthenticated, user } = this.context;
 
     if (success) {
       return (
         <div className="contact-page">
+          <nav className="navbar">
+            <div className="nav-container">
+              <div className="logo">ArtHive</div>
+              <div className="nav-right">
+                <ul className="nav-links">
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/explore">Explore</a></li>
+                  <li><a href="/about">About Us</a></li>
+                  <li><a href="/contact">Contact Us</a></li>
+                  <li>
+                    {!isAuthenticated ? (
+                      <button className="signup-btn" onClick={() => window.location.href = '/signup'}>
+                        Signup/Login
+                      </button>
+                    ) : (
+                      <ProfileDropdown
+                        user={user}
+                        onLogout={() => this.context.logout()}
+                      />
+                    )}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </nav>
+
           <div className="contact-container">
             <div className="success-message">
               <h2>Message Sent!</h2>
@@ -83,6 +120,32 @@ class ContactUs extends Component {
 
     return (
       <div className="contact-page">
+        <nav className="navbar">
+          <div className="nav-container">
+            <div className="logo">ArtHive</div>
+            <div className="nav-right">
+              <ul className="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/explore">Explore</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/contact">Contact Us</a></li>
+                <li>
+                  {!isAuthenticated ? (
+                    <button className="signup-btn" onClick={() => window.location.href = '/signup'}>
+                      Signup/Login
+                    </button>
+                  ) : (
+                    <ProfileDropdown
+                      user={user}
+                      onLogout={() => this.context.logout()}
+                    />
+                  )}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
         <div className="contact-container">
           <div className="contact-form">
             <h1>Contact Us</h1>

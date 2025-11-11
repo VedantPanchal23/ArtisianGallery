@@ -121,6 +121,128 @@ Request password reset link.
 
 ---
 
+## User Profile Endpoints
+
+### 1. Get User Profile
+**GET** `/users/profile`
+
+Get authenticated user's profile information.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "user": {
+    "_id": "64f5a7b8c2e1234567890123",
+    "name": "vedant bauna",
+    "username": "vedantbauna",
+    "email": "vedant@gmail.com",
+    "role": "user",
+    "avatarUrl": "",
+    "bio": "Art enthusiast and collector",
+    "purchasedArtworks": [],
+    "uploadedArtworks": [],
+    "isBlocked": false,
+    "createdAt": "2023-09-24T10:30:00.000Z",
+    "updatedAt": "2023-09-24T10:30:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+- **401 Unauthorized**: Invalid or missing token
+- **404 Not Found**: User not found
+- **500 Internal Server Error**: Server errors
+
+---
+
+### 2. Update User Profile
+**PUT** `/users/profile`
+
+Update authenticated user's profile information.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Request Body:**
+```json
+{
+  "name": "Vedant Bauna Updated",
+  "email": "newemail@gmail.com",
+  "bio": "Updated bio text"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "user": {
+    "_id": "64f5a7b8c2e1234567890123",
+    "name": "Vedant Bauna Updated",
+    "username": "vedantbauna",
+    "email": "newemail@gmail.com",
+    "role": "user",
+    "avatarUrl": "",
+    "bio": "Updated bio text",
+    "purchasedArtworks": [],
+    "uploadedArtworks": [],
+    "isBlocked": false,
+    "createdAt": "2023-09-24T10:30:00.000Z",
+    "updatedAt": "2023-09-24T10:30:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+- **400 Bad Request**: Email already in use
+- **401 Unauthorized**: Invalid or missing token
+- **404 Not Found**: User not found
+- **500 Internal Server Error**: Server errors
+
+---
+
+### 3. Get Purchased Artworks
+**GET** `/users/purchased`
+
+Get list of artworks purchased by authenticated user.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "artworks": [
+    {
+      "_id": "64f5a7b8c2e1234567890456",
+      "title": "Beautiful Sunset",
+      "artist": "Artist Name",
+      "price": 100,
+      "image": "https://example.com/image.jpg"
+    }
+  ]
+}
+```
+
+**Error Responses:**
+- **401 Unauthorized**: Invalid or missing token
+- **404 Not Found**: User not found
+- **500 Internal Server Error**: Server errors
+
+---
+
 ## Authentication Headers
 
 For protected routes, include the JWT token in the Authorization header:

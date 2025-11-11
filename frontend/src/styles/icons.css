@@ -1,0 +1,176 @@
+/* src/styles/icons.css */
+.btn--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn--icon:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn--icon:focus {
+  outline: 2px solid #0095f6;
+  outline-offset: 2px;
+}
+
+/* Icon color variations */
+.icon--muted {
+  opacity: 0.6;
+  color: #6b7280;
+}
+
+.icon--accent {
+  color: #0095f6;
+}
+
+.icon--success {
+  color: #10b981;
+}
+
+.icon--error {
+  color: #ef4444;
+}
+
+.icon--warning {
+  color: #f59e0b;
+}
+
+/* Badge styles */
+.badge {
+  background: #ef4444;
+  color: white;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 18px;
+  text-align: center;
+}
+
+.badge--success {
+  background: #10b981;
+}
+
+.badge--info {
+  background: #0095f6;
+}
+
+/* Notification bell specific */
+.notif-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notif-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.notif-btn:focus {
+  outline: 2px solid #0095f6;
+  outline-offset: 2px;
+}
+
+/* Cart button specific */
+.cart-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cart-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.cart-btn:focus {
+  outline: 2px solid #0095f6;
+  outline-offset: 2px;
+}
+
+/* Status icons */
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-icon.success {
+  color: #10b981;
+}
+
+.status-icon.error {
+  color: #ef4444;
+}
+
+.status-icon.warning {
+  color: #f59e0b;
+}
+
+.status-icon.info {
+  color: #0095f6;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Icon button variations */
+.btn-icon-primary {
+  background: #0095f6;
+  color: white;
+  border: 1px solid #0095f6;
+}
+
+.btn-icon-primary:hover {
+  background: #007acc;
+  border-color: #007acc;
+}
+
+.btn-icon-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-icon-secondary:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .btn--icon {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 1px 5px;
+  }
+}

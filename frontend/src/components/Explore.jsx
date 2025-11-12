@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
+import { getImageUrl } from '../utils/constants';
 import './Explore.css';
 
 class Explore extends Component {
@@ -335,7 +336,7 @@ class Explore extends Component {
                 {artworks.map(artwork => (
                   <div key={artwork._id} className="artwork-card" onClick={() => this.handleArtworkClick(artwork._id)}>
                     <div className="artwork-image">
-                      <img src={artwork.thumbnailUrl || artwork.imageUrl} alt={artwork.title} />
+                      <img src={getImageUrl(artwork.thumbnailUrl || artwork.imageUrl)} alt={artwork.title} />
                       <div className="artwork-overlay">
                         <button className="view-btn">View Details</button>
                       </div>

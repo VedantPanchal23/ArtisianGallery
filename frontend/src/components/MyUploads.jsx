@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { getImageUrl } from '../utils/constants';
 import './MyUploads.css';
 
 class MyUploads extends Component {
@@ -415,7 +416,7 @@ class MyUploads extends Component {
               {filteredArtworks.map((artwork) => (
                 <div key={artwork._id} className="artwork-card">
                   <div className="artwork-image">
-                    <img src={artwork.thumbnailUrl || artwork.imageUrl} alt={artwork.title} />
+                    <img src={getImageUrl(artwork.thumbnailUrl || artwork.imageUrl)} alt={artwork.title} />
                     <div className={`status-badge ${this.getStatusBadgeClass(artwork.status)}`}>
                       {artwork.status}
                     </div>

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { getImageUrl } from '../utils/constants';
 import './UserProfile.css';
 
 class UserProfile extends Component {
@@ -131,7 +132,7 @@ class UserProfile extends Component {
             purchasedArt.push({
               id: artwork.artwork,
               title: artwork.title,
-              image: artwork.imageUrl,
+              image: getImageUrl(artwork.imageUrl),
               artist: artwork.artistName,
               price: artwork.price,
               currency: artwork.currency,
@@ -191,7 +192,7 @@ class UserProfile extends Component {
           id: artwork._id,
           title: artwork.title,
           artist: artwork.artist.name,
-          image: artwork.thumbnailUrl || artwork.imageUrl,
+          image: getImageUrl(artwork.thumbnailUrl || artwork.imageUrl),
           price: artwork.price,
           currency: artwork.currency
         }));

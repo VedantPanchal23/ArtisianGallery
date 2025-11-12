@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import FollowButton from './FollowButton';
 import ReviewList from './ReviewList';
 import RatingStars from './RatingStars';
+import { getImageUrl } from '../utils/constants';
 import './ArtworkDetail.css';
 
 class ArtworkDetail extends Component {
@@ -365,7 +366,7 @@ class ArtworkDetail extends Component {
           <div className="artwork-content">
             {/* Left Side - Image */}
             <div className="artwork-image-section">
-              <img src={artwork.imageUrl} alt={artwork.title} className="artwork-image" />
+              <img src={getImageUrl(artwork.imageUrl)} alt={artwork.title} className="artwork-image" />
               <div className="artwork-actions-mobile">
                 <button 
                   className={`icon-btn ${isLiked ? 'liked' : ''}`}

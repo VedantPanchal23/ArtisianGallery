@@ -61,7 +61,7 @@ reviewSchema.index({ artwork: 1, rating: -1 });
 reviewSchema.statics.calculateAverageRating = async function(artworkId) {
   try {
     const result = await this.aggregate([
-      { $match: { artwork: mongoose.Types.ObjectId(artworkId) } },
+      { $match: { artwork: new mongoose.Types.ObjectId(artworkId) } },
       {
         $group: {
           _id: '$artwork',

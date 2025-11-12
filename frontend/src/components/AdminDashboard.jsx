@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { getImageUrl } from '../utils/constants';
 import './AdminDashboard.css';
 
 class AdminDashboard extends Component {
@@ -499,7 +500,7 @@ class AdminDashboard extends Component {
                     {pendingArtworks.map((artwork) => (
                       <div key={artwork._id} className="artwork-review-card">
                         <div className="artwork-image">
-                          <img src={artwork.thumbnailUrl || artwork.imageUrl} alt={artwork.title} />
+                          <img src={getImageUrl(artwork.thumbnailUrl || artwork.imageUrl)} alt={artwork.title} />
                         </div>
                         <div className="artwork-info">
                           <h3>{artwork.title}</h3>
@@ -617,7 +618,7 @@ class AdminDashboard extends Component {
                   <div className="top-items-grid">
                     {analytics.topArtworks.map((artwork) => (
                       <div key={artwork._id} className="top-item-card">
-                        <img src={artwork.imageUrl} alt={artwork.title} />
+                        <img src={getImageUrl(artwork.imageUrl)} alt={artwork.title} />
                         <div className="top-item-info">
                           <h4>{artwork.title}</h4>
                           <p>by {artwork.artist.name}</p>

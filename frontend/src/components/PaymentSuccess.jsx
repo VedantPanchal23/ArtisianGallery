@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { getImageUrl } from '../utils/constants';
 import './PaymentSuccess.css';
 
 class PaymentSuccess extends Component {
@@ -187,7 +188,7 @@ class PaymentSuccess extends Component {
             <div className="artworks-list">
               {transaction.artworks.map((item, index) => (
                 <div key={index} className="artwork-item">
-                  <img src={item.imageUrl} alt={item.title} />
+                  <img src={getImageUrl(item.imageUrl)} alt={item.title} />
                   <div className="artwork-info">
                     <h3>{item.title}</h3>
                     <p className="artist-name">by {item.artistName}</p>

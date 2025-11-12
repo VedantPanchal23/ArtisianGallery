@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
+import { getImageUrl } from '../utils/constants';
 import './Cart.css';
 
 class Cart extends Component {
@@ -158,7 +159,7 @@ class Cart extends Component {
                     {cartContext.cart.map((item) => (
                       <div key={item._id} className="cart-item">
                         <div className="item-image" onClick={() => window.location.href = `/artwork/${item._id}`}>
-                          <img src={item.imageUrl} alt={item.title} />
+                          <img src={getImageUrl(item.imageUrl)} alt={item.title} />
                         </div>
                         <div className="item-details">
                           <h3 className="item-title">{item.title}</h3>

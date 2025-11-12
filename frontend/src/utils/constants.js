@@ -6,8 +6,28 @@
 // API Configuration
 export const API_CONFIG = {
   BASE_URL: 'http://localhost:3000/api/v1',
+  BACKEND_URL: 'http://localhost:3000',
   TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 3
+};
+
+/**
+ * Get full image URL - handles both Cloudinary and local uploads
+ * @param {string} imageUrl - The image URL from the API
+ * @returns {string} Full image URL
+ */
+export const getImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    return DEFAULTS.ARTWORK_IMAGE;
+  }
+  
+  // If it's already a full URL (Cloudinary), return as is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  
+  // For local uploads, prepend the backend URL
+  return `${API_CONFIG.BACKEND_URL}${imageUrl}`;
 };
 
 // Storage Keys

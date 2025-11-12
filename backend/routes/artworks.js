@@ -135,7 +135,16 @@ router.post('/upload-image', auth, function(req, res, next) {
     }
 
     // Get image URL
-    var imageUrl = req.file.path || `/uploads/artworks/${req.file.filename}`;
+    // For Cloudinary uploads, req.file.path contains the full URL
+    // For local uploads, construct the URL without the 'public' prefix since files are served from root
+    var imageUrl = req.file.path;
+    if (!imageUrl.startsWith('http')) {
+      // Local upload - remove 'public/' prefix if present
+      imageUrl = imageUrl.replace(/^public\//, '/').replace(/\\/g, '/');
+      if (!imageUrl.startsWith('/')) {
+        imageUrl = '/' + imageUrl;
+      }
+    }
     
     res.status(200).json({
       success: true,

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
+import { getImageUrl } from '../utils/constants';
 import './Checkout.css';
 
 class Checkout extends Component {
@@ -454,7 +455,7 @@ class Checkout extends Component {
                     <div className="summary-items">
                       {cartContext.cart.map((item) => (
                         <div key={item._id} className="summary-item">
-                          <img src={item.imageUrl} alt={item.title} />
+                          <img src={getImageUrl(item.imageUrl)} alt={item.title} />
                           <div className="summary-item-info">
                             <h4>{item.title}</h4>
                             <p>{item.artistName}</p>

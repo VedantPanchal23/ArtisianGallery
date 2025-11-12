@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { getImageUrl } from '../utils/constants';
 import './LandingPage.css';
 
 class LandingPage extends Component {
@@ -207,7 +208,7 @@ class LandingPage extends Component {
               <div className="artwork-grid">
                 {trendingArtworks.map(artwork => (
                   <div key={artwork._id} className="artwork-card" onClick={() => this.handleArtworkClick(artwork._id)} style={{cursor: 'pointer'}}>
-                    <img src={artwork.thumbnailUrl || artwork.imageUrl} alt={artwork.title} />
+                    <img src={getImageUrl(artwork.thumbnailUrl || artwork.imageUrl)} alt={artwork.title} />
                     <div className="artwork-info">
                       <h3>{artwork.title}</h3>
                       <p>{artwork.category}</p>
